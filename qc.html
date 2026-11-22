@@ -447,7 +447,7 @@ input[type=color]{width:34px;height:30px;border:0;background:none;padding:0;flex
   <div class="cl-quad" style="top:87px"><div id="cl-q1c"></div><div id="cl-q1b" class="cl-qb"></div></div>
   <div class="cl-quad" style="top:408px"><div id="cl-q2c"></div><div id="cl-q2b" class="cl-qb"></div></div>
   <div id="cl-nav"><button data-nav="m:0">Menü</button><button data-pg="1">Plugins</button><button data-nav="fav">Favoriten</button><button disabled>MyTouch</button><button disabled>Notiz</button><button disabled></button><button data-sys="1">System</button></div>
-  <div id="cl-sys" class="hidden"><button data-sysa="modern">Ansicht: Modern</button><button data-sysa="style">Stil wechseln</button><button data-sysa="camproxy">Kamera-Proxy</button><button data-sysa="log">Log anzeigen</button><button data-sysa="copy">Log kopieren</button><button data-sysa="logout">Abmelden</button><div id="cl-ver"></div></div>
+  <div id="cl-sys" class="hidden"><button data-sysa="modern">Ansicht: Modern</button><button data-sysa="format">Format: 16:9</button><button data-sysa="style">Stil wechseln</button><button data-sysa="camproxy">Kamera-Proxy</button><button data-sysa="log">Log anzeigen</button><button data-sysa="copy">Log kopieren</button><button data-sysa="logout">Abmelden</button><div id="cl-ver"></div></div>
   <div id="cl-log" class="hidden"><pre></pre><button data-sysa="logclose">Schließen</button></div>
 </div></section>
 <dialog id="clpop" aria-label="Bedienung"></dialog>
@@ -2689,10 +2689,11 @@ function buildNav() {
   h += `<label class="startsel">Startseite <select id="startsel"><option value="m" ${st === "m" ? "selected" : ""}>Menü</option>
     <option value="fav" ${st === "fav" ? "selected" : ""}>Favoriten</option><option value="last" ${st === "last" ? "selected" : ""}>zuletzt geöffnet</option></select></label>
     <label class="startsel">Ansicht <select id="uisel"><option value="modern">Modern</option><option value="classic" ${CLASSIC ? "selected" : ""}>Klassisch (QuadClient)</option></select></label>
-    <label class="startsel">Stil Klassisch <select id="clstylesel"><option value="modern">Modern</option><option value="gira" ${CLSTYLE === "gira" ? "selected" : ""}>Gira</option></select></label>`;
+    <label class="startsel">Stil Klassisch <select id="clstylesel"><option value="modern">Modern</option><option value="gira" ${CLSTYLE === "gira" ? "selected" : ""}>Gira</option></select></label>
+    <label class="startsel">Format Klassisch <select id="clformatsel"><option value="16:9" ${CLFORMAT === "16:9" ? "selected" : ""}>16:9</option><option value="4:3" ${CLFORMAT === "4:3" ? "selected" : ""}>4:3 (1024×768)</option></select></label>`;
   h += `<label class="startsel">Gira-Addins <select id="addinsel"><option value="0">aus</option><option value="1" ${ADDINS_ON ? "selected" : ""}>ein (Versuch: Wetter)</option></select></label>`;
   $("cl-ver").textContent = "QC-Client v" + VERSION;                                   // v0.9.47: Version auch im System-Menü der klassischen Ansicht
-  { const cp = store.get("camproxy", null), sb = document.querySelector('#cl-sys [data-sysa="camproxy"]'); if (sb) sb.textContent = "Kamera-Proxy: " + (cp && cp.url ? "eingerichtet" : "aus");
+  { const cp = store.get("camproxy", null), sb = document.querySelector('#cl-sys [data-sysa="camproxy"]'), fb = document.querySelector('#cl-sys [data-sysa="format"]'); if (sb) sb.textContent = "Kamera-Proxy: " + (cp && cp.url ? "eingerichtet" : "aus"); if (fb) fb.textContent = "Format: " + CLFORMAT;
     h += `<button class="cpbtn" id="cpbtn" type="button">Kamera-Proxy: ${cp && cp.url ? "eingerichtet" : "aus"}</button>`; }
   if (P_.menu && P_.menu.length) h += `<button data-v="m:0">Menü<span></span></button>`;
   h += `<button data-v="fav">Favoriten<span>${favs.size}</span></button>`;
@@ -2706,6 +2707,7 @@ function buildNav() {
   $("cpbtn").onclick = camProxyDlg;
   $("addinsel").onchange = e => addinSwitch(e.target.value === "1");
   $("clstylesel").onchange = e => clSetStyle(e.target.value);
+  $("clformatsel").onchange = e => clSetFormat(e.target.value);
   $("uisel").onchange = e => clSetUi(e.target.value);
 }
 function viewData(v) {
@@ -2762,9 +2764,14 @@ function updateKo(ko) {
    Was der Übersetzer (noch) nicht kann – Popups, PIN, Szenen-Lernen … – öffnet die moderne Kachel derselben Funktion. */
 let CLASSIC = store.get("ui", "modern") === "classic";
 let CLSTYLE = store.get("clstyle", "modern");                          // Optik der klassischen Ansicht: "modern" | "gira"
+let CLFORMAT = store.get("clformat", "16:9");                          // Zielbild der klassischen Ansicht: "16:9" | "4:3"
+if (CLFORMAT !== "4:3") CLFORMAT = "16:9";
 document.documentElement.classList.toggle("cl-gira", CLSTYLE === "gira");
 function clSetStyle(st) { CLSTYLE = st; store.set("clstyle", st); document.documentElement.classList.toggle("cl-gira", st === "gira");
   const b = document.querySelector('#cl-sys [data-sysa="style"]'); if (b) b.textContent = "Stil: " + (st === "gira" ? "Gira" : "Modern"); }
+function clSetFormat(f) { CLFORMAT = f === "4:3" ? "4:3" : "16:9"; store.set("clformat", CLFORMAT);
+  const b = document.querySelector('#cl-sys [data-sysa="format"]'); if (b) b.textContent = "Format: " + CLFORMAT;
+  if (CLASSIC) { clScale(); clRender(); } }
 const CL = { tpl: null, lang: {}, lay: {}, grid: {}, loading: null, err: "", qsel: { 1: 0, 2: 0 }, qoff: { 1: 0, 2: 0 }, top: {}, hosts: {}, press: null, rows: 15, page: "left", s: 1 };
 const clWide = () => window.innerWidth >= 900;                         // breit (Tablet, PC): alle vier Quadranten
 const clPhone = () => !clWide();                                       // schmal (Handy): eine Spalte, siehe clScale
@@ -3033,13 +3040,13 @@ function clHead() {
 /* Maßstab und Aufteilung. Breit: 1366 × 768 eingepasst. Handy: 680 breit auf die Fensterbreite, die Liste bekommt so viele
    Zeilen, wie in die Höhe passen (mindestens 15). Rückgabe: true, wenn sich die Aufteilung geändert hat (neu zeichnen). */
 function clScale() {
-  const st = $("clstage"), C = $("classic"), ph = clPhone(), W = ph ? 680 : 1366; let s, rows = 15, H = 768;
+  const st = $("clstage"), C = $("classic"), ph = clPhone(), f43 = !ph && CLFORMAT === "4:3", W = ph ? 680 : f43 ? 1024 : 1366; let s, rows = 15, H = 768;
   if (ph) { s = window.innerWidth / 680; rows = Math.max(15, Math.floor((window.innerHeight / s - 168) / 40)); H = rows * 40 + 168; s = Math.min(s, window.innerHeight / H); }
-  else s = Math.min(window.innerWidth / 1366, window.innerHeight / 768);
-  const changed = rows !== CL.rows || ph !== C.classList.contains("cl-phone");
+  else s = Math.min(window.innerWidth / W, window.innerHeight / 768);
+  const changed = rows !== CL.rows || ph !== C.classList.contains("cl-phone") || f43 !== C.classList.contains("cl-43");
   CL.rows = rows; CL.s = s; st.style.setProperty("--lh", rows * 40 + "px"); st.style.setProperty("--pz", ph ? String(1 / s) : "1");
-  C.classList.toggle("cl-phone", ph); C.classList.toggle("pg-plug", ph && CL.page === "plug");
-  st.style.transform = `scale(${s})`; st.style.left = Math.max(0, (window.innerWidth - W * s) / 2) + "px"; st.style.top = ph ? "0" : Math.max(0, (window.innerHeight - H * s) / 2) + "px";
+  C.classList.toggle("cl-phone", ph); C.classList.toggle("cl-43", f43); C.classList.toggle("pg-plug", ph && CL.page === "plug");
+  st.style.transform = f43 ? `scale(${s * 1024 / 1366},${s})` : `scale(${s})`; st.style.left = Math.max(0, (window.innerWidth - W * s) / 2) + "px"; st.style.top = ph ? "0" : Math.max(0, (window.innerHeight - H * s) / 2) + "px";
   return changed;
 }
 let clTimer = null;
@@ -3377,6 +3384,7 @@ $("classic").addEventListener("click", e => {
   if (t.dataset.sys) { $("cl-sys").classList.toggle("hidden"); return; }
   if (t.dataset.sysa) { $("cl-sys").classList.add("hidden");
     if (t.dataset.sysa === "modern") clSetUi("modern");
+    if (t.dataset.sysa === "format") clSetFormat(CLFORMAT === "4:3" ? "16:9" : "4:3");
     if (t.dataset.sysa === "style") { clSetStyle(CLSTYLE === "gira" ? "modern" : "gira"); clRender(); }
     if (t.dataset.sysa === "log") { $("cl-log").querySelector("pre").textContent = $("log").textContent; $("cl-log").classList.remove("hidden"); }
     if (t.dataset.sysa === "logclose") $("cl-log").classList.add("hidden");
