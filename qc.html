@@ -149,6 +149,21 @@ html:not(.cl-gira) .cl-vt .row{border-bottom-color:#ffffff14}html:not(.cl-gira) 
 #classic.cl-phone:not(.pg-plug) .cl-quad{visibility:hidden}#classic.cl-phone.pg-plug #cl-left{display:none}
 #classic.cl-phone #cl-log{left:0;height:calc(var(--lh) + 37px)}
 #classic.cl-phone .cl-mt{zoom:1.5}
+/* Echtes 4:3-Raster: 1024×768 statt nichtproportionaler Streckung der 1366×768-Bühne. */
+#classic.cl-43 #clstage{width:1024px;height:768px}
+#classic.cl-43 .cl-head,#classic.cl-43 #cl-nav{width:1024px}
+#classic.cl-43 #cl-left{width:500px}
+#classic.cl-43 .cl-row,#classic.cl-43 .cl-lrow,#classic.cl-43 .cl-bar{width:500px}
+#classic.cl-43 .cl-mt{width:164px}
+#classic.cl-43 .cl-mt .t1,#classic.cl-43 .cl-mt .t2{width:104px;font-size:15px}
+#classic.cl-43 .cl-mi{left:105px;width:58px}
+#classic.cl-43 .cl-quad{left:506px;width:510px}
+#classic.cl-43 .cl-qctl,#classic.cl-43 .cl-qb{width:510px}
+#classic.cl-43 .cl-qb > .cl-vgrid,#classic.cl-43 .cl-qb > .cl-sub,#classic.cl-43 .cl-qb > .cl-chart,#classic.cl-43 .cl-qb > .cl-sonos,#classic.cl-43 .cl-qb > .cl-camv,#classic.cl-43 .cl-qb > .cl-camg{transform:scale(.75);transform-origin:0 0}
+#classic.cl-43 .cl-qb > .cl-vgrid{width:680px}
+#classic.cl-43 .cl-psel{width:366px}
+#classic.cl-43 .cl-name{width:200px}
+#classic.cl-43 .cl-vl:nth-child(1){left:250px!important}#classic.cl-43 .cl-vl:nth-child(2){left:333px!important}#classic.cl-43 .cl-vl:nth-child(3){left:416px!important}
 #cl-log pre{flex:1;overflow:auto;margin:0;padding:10px;font-size:12px;white-space:pre-wrap}#cl-log button{padding:10px;border-top:1px solid #333}
 #clcard{border:1px solid #2b302d;border-radius:14px;padding:12px;width:min(420px,94vw);--bg:#121514;--panel:#1c201e;--ink:#e9ece9;--muted:#9aa29d;--line:#2b302d;--acc:#f0954a;--acc-soft:#3a2a1d;--on:#f2b33d;color-scheme:dark;background:var(--bg);color:var(--ink)}
 .cl-badge{border-radius:50%;background:#000}.cl-bdg>svg{width:100%;height:100%;display:block}
@@ -507,7 +522,7 @@ if (location.protocol === "http:" && location.hostname && !/^(localhost|127\.)/.
      C→S 80||  → S→C 81|zeit|        Keepalive
    Dateien: https://<HS>/quad/client/client_project.xml?<sid>
    ============================================================ */
-const VERSION = "0.9.51";
+const VERSION = "0.9.52";
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const store = {
@@ -2775,6 +2790,7 @@ function clSetFormat(f) { CLFORMAT = f === "4:3" ? "4:3" : "16:9"; store.set("cl
 const CL = { tpl: null, lang: {}, lay: {}, grid: {}, loading: null, err: "", qsel: { 1: 0, 2: 0 }, qoff: { 1: 0, 2: 0 }, top: {}, hosts: {}, press: null, rows: 15, page: "left", s: 1 };
 const clWide = () => window.innerWidth >= 900;                         // breit (Tablet, PC): alle vier Quadranten
 const clPhone = () => !clWide();                                       // schmal (Handy): eine Spalte, siehe clScale
+const cl43 = () => !clPhone() && CLFORMAT === "4:3";
 const clOn = () => CLASSIC && P_ && !$("app").classList.contains("hidden-force");
 async function clLoad() {
   if (CL.loading) return CL.loading;
@@ -2949,14 +2965,15 @@ function clScenes(ref, el, T, X) {
 }
 /* ---------- Rahmen ---------- */
 function clMenuTile(m, col, row) {
-  if (!m.isPage && !m.t1 && !m.cmds.length) return `<div class="cl-mt empty" style="left:${[2, 228, 454][col]}px;top:${row * 80}px"></div>`;
+  const mx = cl43() ? [2, 169, 336] : [2, 228, 454];
+  if (!m.isPage && !m.t1 && !m.cmds.length) return `<div class="cl-mt empty" style="left:${mx[col]}px;top:${row * 80}px"></div>`;
   const c = m.cmds[0] || {}, plug = !m.isPage && ((c.type === "2" && !plugSupported(c.plugin_id)) || !m.cmds.length);
   let extra = "";
   if (m.state && m.state.tag) { MENU_TAGS.add(m.state.tag);
     if (m.state.type === "3") { const n = num(m.state.tag) || 0, cc = LEDC[m.state.cc];
       extra = `<span class="cl-cnt${n ? "" : " zero"}"${cc && cc !== LEDC[2] ? ` style="background:${cc}"` : ""}>${fmt(n, 0)}</span>`; }
     if (m.state.type === "1") { const L = menuLed(m.state); extra = `<span class="cl-led${L.c ? " on" : ""}"${L.c ? ` style="background:${L.c};box-shadow:0 0 6px ${L.c}aa"` : ""}></span>`; } }
-  return `<button class="cl-mt${plug ? " off" : ""}" data-m="${esc(m.id)}" style="left:${[2, 228, 454][col]}px;top:${row * 80}px">
+  return `<button class="cl-mt${plug ? " off" : ""}" data-m="${esc(m.id)}" style="left:${mx[col]}px;top:${row * 80}px">
     <span class="t1">${esc(m.t1)}</span><span class="t2">${esc(m.t2)}</span>${extra}${m.isPage ? '<span class="cl-pg"></span>' : ""}
     <span class="cl-mi">${m.isPage ? qf(m.ico) || svg("plugin") : qf(m.ico) || svg(menuIcon(m.ico))}</span></button>`;
 }
@@ -2981,13 +2998,15 @@ function clLeft() {
   const list = v.items.filter(i => P_.els[i.ref] && P_.els[i.ref].kind !== "spacer");
   const shown = list.slice(top, top + R);
   const rows = shown.map((it, i) => clRow(it.ref, P_.els[it.ref], it.label, i)).join("") + Array.from({ length: R - shown.length }, (_, k) => `<div class="cl-row" style="top:${(shown.length + k) * 40}px"></div>`).join("");
-  const lines = '<div class="cl-vl" style="left:340px"></div><div class="cl-vl" style="left:453px"></div><div class="cl-vl" style="left:566px"></div>';
+  const lp = cl43() ? [250, 333, 416] : [340, 453, 566];
+  const lines = lp.map(x => `<div class="cl-vl" style="left:${x}px"></div>`).join("");
   return { title: v.title, html: lines + rows + (list.length ? "" : `<div class="cl-empty">${cur === "fav" ? "Noch keine Favoriten." : "Keine Elemente."}</div>`) + clBar(true, top > 0, top + R < list.length, R) };
 }
 function clBar(back, up, down, per) {
-  return `<div class="cl-bar"><button data-cl="back" ${back ? "" : "disabled"} style="left:0;width:226px">zurück</button>
-    <button data-cl="pgup" ${up ? "" : "disabled"} style="left:226px">${svg("up")}${svg("up")}</button><button data-cl="pgdn" ${down ? "" : "disabled"} style="left:339px">${svg("down")}${svg("down")}</button>
-    <button data-cl="up" ${up ? "" : "disabled"} style="left:452px">${svg("up")}</button><button data-cl="dn" ${down ? "" : "disabled"} style="left:565px">${svg("down")}</button></div>`.replace(/<button data-cl="(pgup|pgdn|up|dn)"/g, `<button data-per="${per}" data-cl="$1"`);
+  const bx = cl43() ? [0, 164, 248, 332, 416] : [0, 226, 339, 452, 565], bw = cl43() ? 84 : 113;
+  return `<div class="cl-bar"><button data-cl="back" ${back ? "" : "disabled"} style="left:${bx[0]}px;width:${cl43() ? 164 : 226}px">zurück</button>
+    <button data-cl="pgup" ${up ? "" : "disabled"} style="left:${bx[1]}px;width:${bw}px">${svg("up")}${svg("up")}</button><button data-cl="pgdn" ${down ? "" : "disabled"} style="left:${bx[2]}px;width:${bw}px">${svg("down")}${svg("down")}</button>
+    <button data-cl="up" ${up ? "" : "disabled"} style="left:${bx[3]}px;width:${bw}px">${svg("up")}</button><button data-cl="dn" ${down ? "" : "disabled"} style="left:${bx[4]}px;width:${bw}px">${svg("down")}</button></div>`.replace(/<button data-cl="(pgup|pgdn|up|dn)"/g, `<button data-per="${per}" data-cl="$1"`);
 }
 function clQuadList(q) {
   if (!PLUGS) return [];
@@ -2996,9 +3015,10 @@ function clQuadList(q) {
 }
 function clQuad(q) {
   const list = clQuadList(q), sel = Math.min(CL.qsel[q], Math.max(0, list.length - 1)), off = CL.qoff[q];
-  const tabs = [0, 1, 2].map(i => { const p = list[off + i]; return `<button class="cl-tab${off + i === sel ? " act" : ""}" data-q="${q}" data-tab="${off + i}" style="left:${57 + [0, 189, 377][i]}px;width:${i === 1 ? 188 : 189}px" ${p ? "" : "disabled"}>${p ? esc(p.title) : ""}</button>`; }).join("");
+  const tw = cl43() ? [130, 130, 130] : [189, 188, 189], tx = cl43() ? [57, 187, 317] : [57, 246, 434], nr = cl43() ? 453 : 623;
+  const tabs = [0, 1, 2].map(i => { const p = list[off + i]; return `<button class="cl-tab${off + i === sel ? " act" : ""}" data-q="${q}" data-tab="${off + i}" style="left:${tx[i]}px;width:${tw[i]}px" ${p ? "" : "disabled"}>${p ? esc(p.title) : ""}</button>`; }).join("");
   return `<div class="cl-qctl"><button class="cl-qa" data-q="${q}" data-qnav="-1" style="left:0" ${sel > 0 ? "" : "disabled"}>${svg("left")}</button>${tabs}
-    <button class="cl-qa" data-q="${q}" data-qnav="1" style="left:623px;width:57px" ${sel < list.length - 1 ? "" : "disabled"}>${svg("right")}</button></div>`;
+    <button class="cl-qa" data-q="${q}" data-qnav="1" style="left:${nr}px;width:57px" ${sel < list.length - 1 ? "" : "disabled"}>${svg("right")}</button></div>`;
 }
 function clQuadOpen(q) {
   const list = clQuadList(q), p = list[Math.min(CL.qsel[q], list.length - 1)], H = CL.hosts[q]; if (!H) return;
@@ -3040,7 +3060,7 @@ function clHead() {
 /* Maßstab und Aufteilung. Breit: 1366 × 768 eingepasst. Handy: 680 breit auf die Fensterbreite, die Liste bekommt so viele
    Zeilen, wie in die Höhe passen (mindestens 15). Rückgabe: true, wenn sich die Aufteilung geändert hat (neu zeichnen). */
 function clScale() {
-  const st = $("clstage"), C = $("classic"), ph = clPhone(), f43 = !ph && CLFORMAT === "4:3", W = ph ? 680 : 1366; let s, rows = 15, H = 768;
+  const st = $("clstage"), C = $("classic"), ph = clPhone(), f43 = !ph && CLFORMAT === "4:3", W = ph ? 680 : f43 ? 1024 : 1366; let s, rows = 15, H = 768;
   if (ph) { s = window.innerWidth / 680; rows = Math.max(15, Math.floor((window.innerHeight / s - 168) / 40)); H = rows * 40 + 168; s = Math.min(s, window.innerHeight / H); }
   else s = Math.min(window.innerWidth / W, window.innerHeight / 768);
   const changed = rows !== CL.rows || ph !== C.classList.contains("cl-phone") || f43 !== C.classList.contains("cl-43");
@@ -3365,7 +3385,7 @@ function clPlugin(id) {
   for (const q of [1, 2]) { const i = clQuadList(q).findIndex(p => p.id === id); if (i >= 0) { CL.qsel[q] = i; CL.qoff[q] = Math.max(0, Math.min(i - 1, clQuadList(q).length - 3)); clRender(); return; } }
   const H = CL.hosts[1]; $("cl-q1c").innerHTML = `<div class="cl-qctl"><button class="cl-tab act" style="left:57px;width:566px">${esc((PLUGS[id] || {}).title || "")}</button></div>`; openPlugin("", id, H);
 }
-function clFrame(title, url) { $("cl-title").textContent = title; $("cl-left").innerHTML = `<iframe src="${esc(url)}" referrerpolicy="no-referrer" style="position:absolute;left:0;top:0;width:680px;height:${CL.rows * 40}px;border:0;background:#fff"></iframe>` + clBar(true, false, false, CL.rows); }
+function clFrame(title, url) { $("cl-title").textContent = title; $("cl-left").innerHTML = `<iframe src="${esc(url)}" referrerpolicy="no-referrer" style="position:absolute;left:0;top:0;width:${cl43() ? 500 : 680}px;height:${CL.rows * 40}px;border:0;background:#fff"></iframe>` + clBar(true, false, false, CL.rows); }
 $("classic").addEventListener("click", e => {
   const t = e.target.closest("button,[data-open]"); if (!t || t.disabled) return;
   if (t.dataset.m) { menuAct(t.dataset.m); return; }
