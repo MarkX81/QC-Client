@@ -480,7 +480,58 @@ input[type=range]{flex:1;accent-color:var(--acc);min-width:0}
 .swatch{width:22px;height:22px;border-radius:50%;border:1px solid var(--line);flex:none}
 input[type=color]{width:34px;height:30px;border:0;background:none;padding:0;flex:none}
 #log{font:11px ui-monospace,Consolas,monospace;white-space:pre;max-height:300px;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:16px}
-
+/* LCARS-inspiriertes Theme: eigene Farben und Formen, ohne Star-Trek-Logos oder Originalgrafiken. */
+html.cl-lcars{--bg:#090b13;--panel:#151525;--ink:#f4e7cf;--muted:#b6a8c7;--line:#3c3854;--acc:#ff9d3d;--acc-soft:#2b2340;--on:#f6c85f;--ok:#6cc9d8;--err:#ef665f}
+html.cl-lcars body{background:#090b13;color:#f4e7cf;font-family:"Trebuchet MS","Segoe UI",Arial,sans-serif}
+html.cl-lcars #app{background:#090b13;color:#f4e7cf}
+html.cl-lcars #app main{background:linear-gradient(135deg,#090b13,#111329 55%,#090b13)}
+html.cl-lcars #app .top{border-bottom:4px solid #9b78c8;background:#151525;box-shadow:0 5px 0 #ff9d3d}
+html.cl-lcars #app .brand b,html.cl-lcars #app h2,html.cl-lcars #app .name{color:#f6c85f}
+html.cl-lcars #app .card,html.cl-lcars #app .pval{background:#151525;border-color:#3c3854;border-radius:18px;box-shadow:inset 0 0 0 2px #20203a,0 4px 0 #080910}
+html.cl-lcars #app .chip,html.cl-lcars #app button{border-color:#9b78c8;color:#f4e7cf}
+html.cl-lcars #app .chip:hover,html.cl-lcars #app button:hover{background:#9b78c8;color:#090b13}
+html.cl-lcars #app nav{background:#111329;border-right:6px solid #ff9d3d}
+html.cl-lcars #app nav .fl{color:#ff9d3d;border-bottom-color:#9b78c8}
+html.cl-lcars #app nav button.act{background:#ff9d3d;color:#090b13;border-radius:0 18px 18px 0}
+html.cl-lcars #app input,html.cl-lcars #app select,html.cl-lcars #app textarea{background:#20203a;color:#f4e7cf;border-color:#9b78c8}
+html.cl-lcars #classic{background:#05060b;color:#f4e7cf;font-family:"Trebuchet MS","Segoe UI",Arial,sans-serif}
+html.cl-lcars #clstage{background:#090b13;color:#f4e7cf}
+html.cl-lcars .cl-head{background:linear-gradient(90deg,#151525 0 58%,#20203a);border-bottom:5px solid #9b78c8}
+html.cl-lcars .cl-head::after{background:#ff9d3d;height:3px;left:18px;right:18px;top:46px}
+html.cl-lcars #cl-title{color:#f6c85f;font-weight:bold;letter-spacing:.8px}
+html.cl-lcars #cl-left{background:#0d0e1b;border-right:6px solid #ff9d3d}
+html.cl-lcars .cl-row,html.cl-lcars .cl-lrow{background:linear-gradient(90deg,#151525,#20203a);border-bottom:2px solid #090a12;color:#f4e7cf!important}
+html.cl-lcars .cl-row.act{background:#30304e;box-shadow:inset 6px 0 0 #ff9d3d}
+html.cl-lcars .cl-name,html.cl-lcars .cl-lrow{color:#f4e7cf!important;font-weight:bold}
+html.cl-lcars .cl-ico,html.cl-lcars .cl-mi{color:#f6c85f}
+html.cl-lcars .cl-mt{background:#20203a;border:2px solid #9b78c8;border-radius:0 18px 18px 0;color:#f4e7cf}
+html.cl-lcars .cl-mt:nth-child(3n+1){border-color:#ff9d3d}
+html.cl-lcars .cl-mt .t1,html.cl-lcars .cl-mt .t2{color:#f4e7cf}
+html.cl-lcars .cl-led.on{background:#ef665f;box-shadow:0 0 10px #ef665f}
+html.cl-lcars .cl-cnt{background:#f6c85f;color:#090b13}
+html.cl-lcars .cl-quad{background:#101124;border:2px solid #9b78c8;border-radius:0 22px 22px 0}
+html.cl-lcars .cl-qctl{background:#20203a;border-bottom:4px solid #ff9d3d}
+html.cl-lcars .cl-tab,html.cl-lcars .cl-qa{color:#f4e7cf!important;border-left-color:#090a12!important}
+html.cl-lcars .cl-tab.act{background:#ff9d3d!important;color:#090b13!important;border-radius:0 14px 0 0}
+html.cl-lcars .cl-qb{background:#151525;color:#f4e7cf}
+html.cl-lcars .cl-vt{background:linear-gradient(135deg,#20203a,#151525);border:2px solid #3c3854;border-radius:0 16px 16px 0;box-shadow:none}
+html.cl-lcars .cl-vt .cap{color:#f6c85f;font-weight:bold}
+html.cl-lcars .cl-vt .row{border-bottom-color:#6b5a80}html.cl-lcars .cl-vt .row b{color:#6cc9d8}
+html.cl-lcars .cl-pi .cl-t{color:#f4e7cf}
+html.cl-lcars .cl-bar,html.cl-lcars #cl-nav{background:#101124;border-top:4px solid #9b78c8}
+html.cl-lcars .cl-bar button,html.cl-lcars #cl-nav button{color:#f4e7cf!important;border-left-color:#3c3854!important}
+html.cl-lcars #cl-nav button.act,html.cl-lcars .cl-bar button:not(:disabled):hover{background:#ff9d3d;color:#090b13!important}
+html.cl-lcars #cl-sys{background:#20203a;border:2px solid #ff9d3d;border-radius:16px;overflow:hidden}
+html.cl-lcars #cl-sys button{color:#f4e7cf;border-bottom-color:#3c3854}
+html.cl-lcars #cl-sys button:hover{background:#ff9d3d;color:#090b13}
+html.cl-lcars .cl-pgb{background:#101124;border-top:2px solid #9b78c8}
+html.cl-lcars .cl-pgb button{color:#f4e7cf!important;border-left-color:#3c3854!important}
+html.cl-lcars .cl-pgb button:hover{background:#ff9d3d;color:#090b13!important}
+html.cl-lcars .cl-sub{background:#20203a;border-bottom:3px solid #ff9d3d}
+html.cl-lcars .cl-sa,html.cl-lcars .cl-st{color:#f4e7cf}
+html.cl-lcars .cl-psel{background:#20203a;color:#f6c85f;border-bottom:3px solid #ff9d3d}
+html.cl-lcars .cl-uhr{color:#ff9d3d!important}html.cl-lcars .cl-uhr.on{color:#f6c85f!important}
+html.cl-lcars .cl-qmsg,html.cl-lcars #cl-log{background:#151525;color:#f4e7cf}
 @media (max-width:760px){
   #app{grid-template-columns:1fr}
   nav{position:fixed;inset:0 25% 0 0;z-index:5;transform:translateX(-100%);transition:.2s;height:100%}
@@ -3119,12 +3170,12 @@ function buildNav() {
   h += `<label class="startsel">Startseite <select id="startsel"><option value="m" ${st === "m" ? "selected" : ""}>Menü</option>
     <option value="fav" ${st === "fav" ? "selected" : ""}>Favoriten</option><option value="last" ${st === "last" ? "selected" : ""}>zuletzt geöffnet</option></select></label>
     <label class="startsel">Ansicht <select id="uisel"><option value="modern">Modern</option><option value="classic" ${CLASSIC ? "selected" : ""}>Klassisch (QuadClient)</option></select></label>
-    <label class="startsel">Stil Klassisch <select id="clstylesel"><option value="modern">Modern</option><option value="gira" ${CLSTYLE === "gira" ? "selected" : ""}>Gira</option></select></label>
+    <label class="startsel">Stil Klassisch <select id="clstylesel"><option value="modern">Modern</option><option value="gira" ${CLSTYLE === "gira" ? "selected" : ""}>Gira</option><option value="lcars" ${CLSTYLE === "lcars" ? "selected" : ""}>LCARS</option></select></label>
     <label class="startsel">Format Klassisch <select id="clformatsel"><option value="16:9" ${CLFORMAT === "16:9" ? "selected" : ""}>16:9</option><option value="4:3" ${CLFORMAT === "4:3" ? "selected" : ""}>4:3 (1024×768)</option></select></label>`;
   h += `<label class="startsel">Gira-Addins <select id="addinsel"><option value="0">aus</option><option value="1" ${ADDINS_ON ? "selected" : ""}>ein (Versuch: Wetter)</option></select></label>`;
   h += `<label class="startsel">Ressourcen, Energiefluss <select id="reszsel"><option value="0">echte Werte</option><option value="1" ${RES_DEMO ? "selected" : ""}>Zufallswerte (Test, alle 5 s)</option></select></label>`;
   $("cl-ver").textContent = "QC-Client v" + VERSION;                                   // v0.9.47: Version auch im System-Menü der klassischen Ansicht
-  { const cp = store.get("camproxy", null), sb = document.querySelector('#cl-sys [data-sysa="camproxy"]'), fb = document.querySelector('#cl-sys [data-sysa="format"]'); if (sb) sb.textContent = "Kamera-Proxy: " + (cp && cp.url ? "eingerichtet" : "aus"); if (fb) fb.textContent = "Format: " + CLFORMAT;
+  { const cp = store.get("camproxy", null), sb = document.querySelector('#cl-sys [data-sysa="camproxy"]'), fb = document.querySelector('#cl-sys [data-sysa="format"]'), sty = document.querySelector('#cl-sys [data-sysa="style"]'); if (sb) sb.textContent = "Kamera-Proxy: " + (cp && cp.url ? "eingerichtet" : "aus"); if (fb) fb.textContent = "Format: " + CLFORMAT; if (sty) sty.textContent = "Stil: " + (CLSTYLE === "gira" ? "Gira" : CLSTYLE === "lcars" ? "LCARS" : "Modern");
     h += `<button class="cpbtn" id="cpbtn" type="button">Kamera-Proxy: ${cp && cp.url ? "eingerichtet" : "aus"}</button>`; }
   if (P_.menu && P_.menu.length) h += `<button data-v="m:0">Menü<span></span></button>`;
   h += `<button data-v="fav">Favoriten<span>${favs.size}</span></button>`;
@@ -3197,12 +3248,14 @@ function updateKo(ko) {
    visible_slot/on_value · <visible from/to> · logic(and/or/sum, type bit, compare, inverse) · action_down/up/repeat(click, from_time/to_time).
    Was der Übersetzer (noch) nicht kann – Popups, PIN, Szenen-Lernen … – öffnet die moderne Kachel derselben Funktion. */
 let CLASSIC = store.get("ui", "modern") === "classic";
-let CLSTYLE = store.get("clstyle", "modern");                          // Optik der klassischen Ansicht: "modern" | "gira"
+let CLSTYLE = store.get("clstyle", "modern");                          // Optik: "modern" | "gira" | "lcars"
 let CLFORMAT = store.get("clformat", "16:9");                          // Zielbild der klassischen Ansicht: "16:9" | "4:3"
 if (CLFORMAT !== "4:3") CLFORMAT = "16:9";
 document.documentElement.classList.toggle("cl-gira", CLSTYLE === "gira");
+document.documentElement.classList.toggle("cl-lcars", CLSTYLE === "lcars");
 function clSetStyle(st) { CLSTYLE = st; store.set("clstyle", st); document.documentElement.classList.toggle("cl-gira", st === "gira");
-  const b = document.querySelector('#cl-sys [data-sysa="style"]'); if (b) b.textContent = "Stil: " + (st === "gira" ? "Gira" : "Modern"); }
+  document.documentElement.classList.toggle("cl-lcars", st === "lcars");
+  const b = document.querySelector('#cl-sys [data-sysa="style"]'); if (b) b.textContent = "Stil: " + (st === "gira" ? "Gira" : st === "lcars" ? "LCARS" : "Modern"); }
 function clSetFormat(f) { CLFORMAT = f === "4:3" ? "4:3" : "16:9"; store.set("clformat", CLFORMAT);
   const b = document.querySelector('#cl-sys [data-sysa="format"]'); if (b) b.textContent = "Format: " + CLFORMAT;
   if (CLASSIC) { clScale(); clRender(); } }
@@ -3823,7 +3876,7 @@ $("classic").addEventListener("click", e => {
   if (t.dataset.sysa) { $("cl-sys").classList.add("hidden");
     if (t.dataset.sysa === "modern") clSetUi("modern");
     if (t.dataset.sysa === "format") clSetFormat(CLFORMAT === "4:3" ? "16:9" : "4:3");
-    if (t.dataset.sysa === "style") { clSetStyle(CLSTYLE === "gira" ? "modern" : "gira"); clRender(); }
+    if (t.dataset.sysa === "style") { clSetStyle(({ modern: "gira", gira: "lcars", lcars: "modern" })[CLSTYLE] || "modern"); clRender(); }
     if (t.dataset.sysa === "log") { $("cl-log").querySelector("pre").textContent = $("log").textContent; $("cl-log").classList.remove("hidden"); }
     if (t.dataset.sysa === "logclose") $("cl-log").classList.add("hidden");
     if (t.dataset.sysa === "camproxy") camProxyDlg();                                    // v0.9.44: auch ohne Wechsel nach „Modern“
