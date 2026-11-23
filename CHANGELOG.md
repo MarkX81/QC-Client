@@ -3,12 +3,78 @@
 Alle Versionen, neueste oben. Ausführlich mit Bildern: [changelog.html](changelog.html).
 Datum = Veröffentlichung auf GitHub; Versionen vor 0.5.5 entstanden vor dem Repo.
 
+## 0.9.62 – Klassische Ansicht am Handy größer
+- **Verbessert:** Am Handy (unter 900 px Breite) ist die klassische Ansicht jetzt rund anderthalbmal so groß: Die Bühne ist 453 statt 680 breit. Dafür stehen Funktionszeilen zweizeilig – oben Symbol und Name über die ganze Breite, darunter die drei Felder der Vorlage nebeneinander; Szenentasten nutzen die ganze zweite Zeile. Pro Seite passen halb so viele Funktionszeilen, Raumlisten bleiben einzeilig. Das Menü hat weiter zwei Spalten, jetzt ohne CSS-zoom. Ab 900 px Breite ist nichts geändert.
+- Beitrag der Android-Sitzung. Geprüft: Tests gegen den nachgebauten HomeServer und im Android-Emulator (412 × 708, Demo-Visu). Nicht geprüft: echtes Gerät, Vorlagen mit Zeitschaltuhr in der Zeile, Platzhalter „Vorlage fehlt“, Stil „Gira“, eingebettete Webseiten.
+- `android/build.ps1`: zwei wahlfreie Parameter `-QcHtml` und `-OutDir` zum Ausprobieren einer anderen `qc.html`; ohne sie unverändert.
+
+## 0.9.61 – Energiefluss: zusätzliche Verbraucher und Zufallswerte
+- **Neu:** Der Energiefluss zeigt zusätzliche Verbraucher als kleine Kreise mit Symbol, Leistung und Name – gedacht für bis zu vier Wallboxen, Waschmaschine, Spülmaschine, Trockner und zehn sonstige (höchstens 17). Je Verbraucher wählbar: Name, eines von 16 eigenen Symbolen und der Anschlusspunkt (Haus als Vorgabe, sonst PV, Speicher oder Netz). Die Linie läuft vom Anschlusspunkt zum Verbraucher, bei negativem Wert zurück; ohne Leistung steht ein dünner Strich. Ab 10 kW in kW.
+- Die Verbraucher kommen aus den Einstellungen eines **eigenen Plugins 99-3** (ID vorläufig): `<ko id tag>` für die zwölf Grundwerte, `<vb id name icon an tag>` je Verbraucher. Das Plugin 180-1 des Drittanbieters kennt keine Verbraucher. **Das Plugin 99-3 für QuadConfig und den Windows-QuadClient gibt es noch nicht** – bis dahin lassen sich die Verbraucher nur mit den Zufallswerten ansehen. Es gehört ins Repo QC-Plugins. Idee und Vorbild ist das Plugin „Energiefluss“ (180-1); dessen ursprünglicher Autor ist [johannesbonn](https://knx-user-forum.de/member/39809-johannesbonn) aus dem KNX-User-Forum. Aus seinem Paket ist nichts übernommen.
+- **Neu:** Der Schalter „Zufallswerte“ (Seitenleiste bzw. System-Menü) gilt jetzt auch für den Energiefluss: alle 5 s neue, in sich stimmige Werte (Netz = PV − Haus ∓ Speicher), gekennzeichnet mit „ZUFALLSWERTE“. Hat die Instanz keine Verbraucher, zeigt der Test neun Beispiel-Verbraucher. Nur Anzeige, es wird nichts gesendet.
+- Geprüft: Tests gegen den nachgebauten HomeServer mit erfundenen Einstellungen. Am echten HomeServer noch nicht ausprobiert.
+
+## 0.9.60 – Energiefluss: Linien fließen wieder
+- **Behoben:** Die Linien im Energiefluss standen still, wenn im Betriebssystem „Animationen reduzieren“ eingeschaltet ist (so auf dem Rechner, an dem es auffiel). Sie laufen jetzt immer in Flussrichtung – zum Haus hin, beim Laden des Speichers vom Haus weg –, weil die Richtung hier die Aussage ist.
+
+## 0.9.59 – Energiefluss wie im QuadClient
+- **Verbessert:** Der Energiefluss (180-1) sieht jetzt aus wie im QuadClient, belegt durch einen Mitschnitt: gefüllte Kreise mit farbigem Symbol, Titel, Wert, darunter „W“ (beim Speicher „W lädt“ / „W entlädt“) und eine Zusatzzeile; Linien nur noch zum Haus und nur, wenn etwas fließt; Fußzeile als eigener Balken mit „Eigenver.“, „Autarkie“, „Einspeisung“, „Netzbezug“ in Farbe und „Live“; kWh mit Punkt und einer Nachkommastelle.
+- Vermutung: bei Einspeisung die Linie PV–Netz (so zeigt es das Vorschaubild des Plugins; im Mitschnitt kam keine Einspeisung vor). Symbole weiterhin eigene Zeichnungen.
+
+## 0.9.58 – Plugin „Energiefluss“ (180-1)
+- **Neu:** Das Zusatz-Plugin „Energiefluss“ (180-1, Smarthome Hammelrath) wird angezeigt: vier Kreise für PV-Anlage, Speicher, Netz und Haus mit Leistung in Watt, dazu PV-Energie und Verbrauch heute, Ladestand und Zustand des Speichers, in der Fußzeile Eigennutzung, Autarkie, Einspeisung und Netzbezug. Gestrichelte Linien laufen in Richtung des Energieflusses. In „Modern“ und „Klassisch“.
+- Belegt aus der Beschreibung des Plugins: die zwölf KOs, Netz positiv = Einspeisung und negativ = Bezug, Speicher-Status 1 = laden, 2 = entladen, sonst Ruhe, die Anordnung der Kreise. Zeichnung und Symbole sind eigene.
+- Belegt an einer echten Instanz: Die Einstellungen stehen als Attribute an `<settings>` (ein KO je Name, 0 = nicht belegt). Vermutung: wann welche Linie läuft. Die Anzeige selbst ist bisher nur am nachgebauten HomeServer mit erfundenen Werten geprüft.
+
+## 0.9.57 – Zufallswerte: jede Zeile mit eigenem Wert
+- **Behoben:** Hängen mehrere Zeilen oder Kacheln des Ressourcen-Plugins am selben KO, zeigten sie mit Zufallswerten alle dieselbe Zahl. Jetzt bekommt jede Zeile ihren eigenen Wert (am echten HomeServer aufgefallen, dort hängen die Test-Kacheln an einem gemeinsamen Test-KO).
+
+## 0.9.56 – Ressourcen: Zufallswerte zum Ausprobieren
+- **Neu:** Im Ressourcen-Plugin lassen sich Zufallswerte einschalten (Menü links: „Ressourcen → Zufallswerte“, in „Klassisch“ im System-Menü „Zufallswerte“). Alle 5 Sekunden bekommen Bilanz, Wertanzeige, Instrument und Diagramm-Kachel neue Werte – so sieht man ohne angeschlossene Zähler, was die Anzeige kann (Bezug/Einspeisung, Speicher, Zeiger, Farbstufen). Solange sie laufen, steht „Zufallswerte“ dabei.
+- Nur Anzeige: Es wird nichts an den HomeServer gesendet, die echten Werte bleiben erhalten und andere Elemente zeigen sie weiter. Nicht gespeichert – nach dem Neuladen ist es wieder aus. Die Diagramm-Verläufe aus den Archiven bleiben echt.
+
+## 0.9.55 – Meldeanlage und Alarmzentrale mit Symbolen
+- **Verbessert:** Meldeanlage und Alarmzentrale in „Klassisch“ in der Anordnung des QuadClients: Titel oben links, Symbol unten links, rechts ein Zustandsfeld. Das Feld zeigt den Zustand als Symbol (Schild mit Haken = bereit, mit Schloss = scharf, durchgestrichen = nicht bereit, Warndreieck = Alarm) und ist zugleich der Knopf zum Scharf-/Unscharfschalten; Quittung und Überfall haben ihr eigenes Feld. Der Zustand steht zusätzlich als Text da. In „Modern“ steht ein Symbol vor jedem Kacheltitel.
+- Die Symbole sind eigene Zeichnungen, keine des Herstellers.
+
+## 0.9.54 – Scharfschalten und Quittieren mit PIN
+- **Neu:** Meldeanlage und Alarmzentrale: Bereiche scharf und unscharf schalten und quittieren. Die PIN des QuadClients kann der Client nicht lesen (wo sie liegt, ist nicht bekannt); stattdessen legt man beim ersten Bedienen eine vierstellige PIN fest, die nur auf diesem Gerät gilt – gespeichert wird nur ein Hashwert im Browser. Die Quittung erscheint, solange ein Alarm ansteht.
+- Belegt aus QuadConfig: Scharfschalt-Eingang 1 = scharf, 0 = unscharf. Vermutung: Quittung sendet 1. Am echten HomeServer mit internen Test-KOs ausprobiert; an einer echten Meldeanlage oder Alarmzentrale noch nicht – vor dem Einsatz dort bitte selbst prüfen.
+
+## 0.9.53 – Überfall-Alarm als Halteknopf, Feuer-Kachel der Alarmzentrale
+- **Neu:** Überfall-Alarm in Meldeanlage und Alarmzentrale: Der Knopf muss wie im QuadClient gedrückt gehalten werden, ein Balken läuft mit; erst danach wird gesendet, Loslassen bricht ab. Haltedauer (2 Sekunden) und gesendeter Wert (1) sind Vermutungen – bitte an der eigenen Anlage prüfen, bevor man sich darauf verlässt. Scharf-/Unscharfschalten und Quittieren gehen weiterhin nicht.
+- **Verbessert:** Plugin KNX-Alarmzentrale: Die Kachel „Feuer-Alarm“ steht wie im QuadClient immer da (ohne Alarm: „Kein Alarm“); bei der Meldeanlage erscheint sie weiterhin nur bei Alarm.
+- v0.9.52 und v0.9.53 am echten HomeServer angesehen: Balkendiagramme, Ressourcen, Meldeanlage und Alarmzentrale werden mit den Werten der Test-KOs angezeigt, beim Durchklicken wird nichts gesendet. Eine echte Meldeanlage oder Alarmzentrale war nicht angeschlossen.
+
+## 0.9.52 – Alarmzentrale (Anzeige), Balkendiagramme und Meldeanlage in „Klassisch“ wie im QuadClient
+- **Neu:** Plugin „KNX-Alarmzentrale“ (1-21) als Anzeige: Zustand der Sicherungsbereiche (auch „Unscharf nach Alarm“), Statusanzeige, Feuer-Alarm und empfangener Überfall-Alarm. Bedienen geht noch nicht; der Client sendet aus diesem Plugin nichts.
+- **Verbessert:** Plugin Balkendiagramme in „Klassisch“: Kacheln im Raster aus den Einstellungen (z. B. eine Spalte × drei Zeilen je Seite), Titel oben links, Symbol unten links, Wert groß rechts bzw. bei zwei Reihen die Werteliste, unten die Blätterleiste. Bisher standen die Werte in drei schmalen Spalten ohne Symbol. Antippen öffnet wie bisher das Diagramm.
+- **Verbessert:** Plugin Meldeanlage in „Klassisch“ im Aufbau des QuadClients: Kacheln in zwei Spalten, Zustand rechts, Melderliste und Ereignisspeicher als Unteransicht; nichts muss mehr gerollt werden. Die Symbole des Originals fehlen noch, der Zustand steht als Text. Weiterhin nur Anzeige.
+- **Behoben:** Plugin Ressourcen in „Klassisch“: Ein langer Titel der Bilanz überdeckte die erste Zeile der Werteliste; die Liste beginnt jetzt unter dem Titel (am echten HomeServer aufgefallen).
+- Vorlage waren Bildschirmfotos des QuadClients. Geprüft am nachgebauten HomeServer; an einem echten HomeServer noch nicht.
+
+## 0.9.51 – Plugin „Meldeanlage“ (Anzeige)
+- **Neu:** Plugin „Meldeanlage“ (1-15) als Anzeige: Zustand der Sicherungsbereiche (Scharfschaltbereit, Scharf, Alarm, Nicht bereit), Statusanzeige, Melderliste mit Anzahl fehlender oder offener Melder, Ereignisspeicher aus dem Meldungsarchiv; der Feuer-Alarm erscheint nur, solange er ansteht.
+- **Bewusst noch nicht:** Scharf- und Unscharfschalten (mit PIN), Quittieren, Überfall-Alarm und Blättern in der Melderliste. Der Client sendet aus diesem Plugin nichts an den HomeServer.
+- Die Felder sind aus den Einstellungen in QuadConfig und der Plugin-Beschreibung abgeleitet; die Rangfolge der Zustände (Alarm vor Scharf vor Scharfschaltbereit) ist eine Vermutung. Geprüft am nachgebauten HomeServer und mit einer Test-Einrichtung ohne echte Meldeanlage; an einer echten Anlage noch nicht.
+
+## 0.9.50 – Gebäudestruktur im Menü, Wertanzeige wie im Original
+- **Neu:** Menübefehl „Gebäudestruktur anzeigen“: zeigt alle Räume, mit „Strukturierte Liste“ erst die Gebäudeteile. An welcher Nummer der HomeServer diesen Befehl erkennt, ist nicht belegt – der Client erkennt ihn an seinen Angaben; ob das bei echten Projekten trifft, muss ein Test zeigen.
+- **Verbessert:** Plugin Wertanzeige in „Klassisch“ wie im QuadClient: feste Kachelgröße, 2 Spalten × 3 Zeilen je Seite, darunter die Blätterleiste. Bisher wurden alle Kacheln auf eine Seite gestaucht, die Schrift wurde winzig. Lange Titel brechen neben der Werteliste um, statt sie zu überdecken; das Symbol ist größer.
+- **Verbessert:** Tippt man einen ausgegrauten Menüpunkt an, steht der Grund im Protokoll (Plugin-Art, die der Client noch nicht kann; fehlendes Plugin; unbekannter Befehl) – damit lässt sich gezielt nachbessern.
+- Gemeldet von einem Tester aus dem Forum – danke. Geprüft am nachgebauten HomeServer; an einem echten HomeServer noch nicht.
+
+## 0.9.49 – Plugin „Ressourcen“
+- **Neu:** Plugin **Ressourcen** (50-1): Bilanz mit Erzeugung, Netz (Bezug/Einspeisung) und Speicher, Zeigerinstrumente, Wertanzeigen und Balkendiagramme – in „Modern“ und im Quadranten der klassischen Ansicht. Beitrag von MarkX81 – danke!
+- Bei der Bilanz ist der Aufbau der Einstellungen bekannt; Instrumente, Wertanzeigen und Diagramme liest der Client tolerant und schreibt die Rohdaten ins Protokoll, damit sich nachbessern lässt. Die Symbole kommen vom eigenen HomeServer.
+- Die Tests prüfen das Plugin am nachgebauten HomeServer mit erfundenen Einstellungen; an einem echten HomeServer haben wir es selbst noch nicht geprüft.
+
 ## 0.9.48 – Tasten mit Schloss aufgeräumt
 - **Verbessert:** In der klassischen Ansicht (Stil „Modern“) sitzt das Schloss-Abzeichen weiter in der oberen rechten Ecke der Taste, die Beschriftung rückt ein Stück nach links – beides überlappt nicht mehr.
 
 ## 0.9.47 – Raum- und Plugin-Sprung aus importierten Vorlagen
 - **Behoben:** Importierte Navigations-Vorlagen (z. B. „Navigation mit Status“) springen jetzt in den Raum bzw. öffnen das Plugin, das in der Funktion eingestellt ist. Bisher erschien beim Antippen nur das Fenster mit allen Einstellungen.
-- In „Modern“ zeigt die Kachel je Sprungziel einen Knopf mit dem Namen des Raums oder Plugins; in „Klassisch“ wirken die Tasten der Zeile wie im QuadClient.
+- In „Modern“ zeigt die Kachel je Sprungziel einen Knopf mit dem Namen des Raums oder Plugins; in „Klassisch“ wirken die Tasten der Zeile wie im QuadClient.
 - **Behoben:** Nach einem Update arbeitete der Client mit dem im Browser aufgehobenen Projektstand der alten Version weiter, bis das Projekt neu übertragen wurde. Dadurch wirkten der Raum- und Plugin-Sprung und die „Sichtbarkeit im Raum“ aus v0.9.45 zunächst nicht. Der aufgehobene Stand wird jetzt mit der neuen Version neu aufgebaut.
 - **Verbessert:** Das Uhr-Symbol der Zeitschaltuhr steht in „Klassisch“ jetzt wie im QuadClient in der dritten Spalte der Zeile (rot = Uhr aus, grün = aktiv) statt neben dem Namen. Nur wenn die Vorlage die dritte Spalte selbst belegt, bleibt es neben dem Namen.
 - **Neu:** Im Menü „System“ der klassischen Ansicht steht unten die Versionsnummer des Clients.

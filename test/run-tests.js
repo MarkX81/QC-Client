@@ -33,7 +33,7 @@ async function start(b, user, extra = []) {
     if (n === "demo.addin.wetter_907.json") return addinMode === "ohne" ? r.fulfill({ status: 404, body: "" }) : r.fulfill({ status: 200, contentType: "application/json", body: Buffer.concat([Buffer.from([0xEF, 0xBB, 0xBF]), T("demo_addin_907.json")]) });
     if (u.includes("/quad/load/ADDINS/SETTINGS907.JSON?SID")) return r.fulfill({ status: 200, contentType: "application/json", body: '{"ort":"Demostadt"}' });
     const f = { "client_project.xml": "demo_project.xml", "client_templates.xml": "demo_templates.xml", "client_language.xml": "demo_language.xml",
-      "quad_plugin.xml": "demo_plugin.xml", "1-2_900.xml": "demo_1-2_900.xml", "1-25_902.xml": "demo_1-25_902.xml", "0-7_903.xml": "demo_0-7_903.xml", "0-4_904.xml": "demo_0-4_904.xml", "0-3_905.xml": "demo_0-3_905.xml", "1-16_906.xml": "demo_1-16_906.xml", "0-2_901.xml": "demo_0-2_901.xml", "1-3_907.xml": "demo_1-3_907.xml", "1-2_908.xml": "demo_1-2_908.xml", "99-2_909.xml": "demo_99-2_909.xml" }[n];
+      "quad_plugin.xml": "demo_plugin.xml", "1-2_900.xml": "demo_1-2_900.xml", "1-25_902.xml": "demo_1-25_902.xml", "0-7_903.xml": "demo_0-7_903.xml", "0-4_904.xml": "demo_0-4_904.xml", "0-3_905.xml": "demo_0-3_905.xml", "1-16_906.xml": "demo_1-16_906.xml", "0-2_901.xml": "demo_0-2_901.xml", "1-3_907.xml": "demo_1-3_907.xml", "1-2_908.xml": "demo_1-2_908.xml", "99-2_909.xml": "demo_99-2_909.xml", "50-1_950.xml": "demo_50-1_950.xml", "1-15_951.xml": "demo_1-15_951.xml", "1-21_952.xml": "demo_1-21_952.xml", "180-1_953.xml": "demo_180-1_953.xml", "99-3_954.xml": "demo_99-3_954.xml" }[n];
     if (n === "client_design.xml") return r.fulfill({ status: 200, contentType: "text/xml", body: T("demo_design.xml") });
     if (u.includes("/quad/public/design_4/public_templates.xml")) return r.fulfill({ status: 200, contentType: "text/xml", body: T("demo_public_templates.xml") });
     if (u.includes("/quad/public/public_language.xml")) return r.fulfill({ status: 200, contentType: "text/xml", body: T("demo_public_language.xml") });
@@ -517,6 +517,251 @@ const card = (pg, n) => pg.locator(".card", { hasText: n }).first();
     await p2.close();
   }
   console.log("Rechte");
+  console.log("Plugin Ressourcen 50-1 (v0.9.49, erfundene Einstellungen)");
+  { const pr = await start(b, "Demo", ["2|9501|1500.0|0", "2|9502|-300.0|0", "2|9503|200.0|0", "2|9504|64.0|0"]); const errs = []; pr.on("pageerror", e => errs.push(e.message));
+    await pr.evaluate(() => openPlugin("Ressourcen", "950")); await pr.waitForTimeout(900);
+    const tx = (await pr.textContent("#pbody")).replace(/\s+/g, " ");
+    ok("Bilanz: Erzeugung, Einspeisung bei negativem Netzwert (Betrag), Speicher", tx.includes("Erzeugung1500 W") && tx.includes("Netz-Einspeisung300 W") && tx.includes("Speicher-Bezug200 W"), tx.slice(0, 300));
+    ok("Instrument mit Wert und Grenzen, Wertanzeige mit Beschriftung", (await pr.locator("#pbody svg.rgauge").count()) === 1 && tx.includes("64%0100") && tx.includes("PV1500 W"), tx.slice(0, 300));
+    ok("unbekannte Art wird übersprungen und im Protokoll genannt", await pr.evaluate(() => document.getElementById("log").textContent.includes("unbekannte Art „Unbekannt“")));
+    await pr.evaluate(() => WSI.onmessage({ data: "1|9502|450.0|0" })); await pr.waitForTimeout(300);
+    ok("KO-Telegramm: Netz wechselt auf Bezug", (await pr.textContent("#pbody")).replace(/\s+/g, " ").includes("Netz-Bezug450 W"));
+    { const tz = async () => (await pr.textContent("#pbody")).replace(/\s+/g, " "), t0 = await tz();                // v0.9.56: Zufallswerte, nur Anzeige
+      const nSent = await pr.evaluate(() => { window.__zs = 0; const o = WSI.send; WSI.send = function (m) { if (!/^80/.test(m)) window.__zs++; return o && o.apply(this, arguments); }; return 0; });
+      await pr.selectOption("#reszsel", "1"); await pr.waitForTimeout(300); const t1 = await tz();
+      ok("Zufallswerte: eingeschaltet, gekennzeichnet, Anzeige ändert sich", t1.includes("Zufallswerte (Test)") && t1.replace(/Zufallswerte[^E]*/, "") !== t0, t1.slice(0, 200));
+      await pr.evaluate(() => resDemoTick()); await pr.waitForTimeout(100); const t2 = await tz();
+      ok("Zufallswerte: nächster Wechsel bringt neue Werte, Takt 5 s", t2 !== t1 && await pr.evaluate(() => RES_DEMO_MS === 5000 && RES_DEMO !== null), t2.slice(0, 200));
+      ok("Zufallswerte: echte Werte unberührt, nichts gesendet", await pr.evaluate(() => V.get("9501") === "1500.0" && V.get("9502") === "450.0" && window.__zs === 0) && nSent === 0);
+      await pr.selectOption("#reszsel", "0"); await pr.waitForTimeout(300); const t3 = await tz();
+      ok("Zufallswerte aus: wieder die echten Werte, Kennzeichnung weg", t3 === t0 && !t3.includes("Zufallswerte"), t3.slice(0, 200)); }
+    await pr.evaluate(() => { PLUGS["950"].quad = "1"; PLUGS["950"].vis = "1"; }); await pr.selectOption("#uisel", "classic"); await pr.waitForTimeout(600);
+    await pr.evaluate(() => clPlugin("950")); await pr.waitForTimeout(900);
+    ok("Klassisch: Kacheln im Quadranten", (await pr.textContent("#cl-q1b")).includes("Netz-Bezug") && (await pr.locator("#cl-q1b svg.rgauge").count()) === 1, await pr.textContent("#cl-q1b"));
+    ok("Klassisch (v0.9.52): Werteliste der Bilanz beginnt unter dem Titel", await pr.evaluate(() => { const t = document.querySelector("#cl-q1b .res-tile:has(.list)"); return t.querySelector(".list .row").getBoundingClientRect().top >= t.querySelector(".cap").getBoundingClientRect().bottom - 1; }));
+    await pr.evaluate(() => document.querySelector('#cl-sys [data-sysa="resdemo"]').click()); await pr.waitForTimeout(300);
+    ok("Klassisch (v0.9.56): Zufallswerte über das System-Menü, Kennzeichnung in der Blätterleiste", (await pr.locator("#cl-q1b .cl-pgb .res-demo").count()) === 1 && (await pr.textContent('#cl-sys [data-sysa="resdemo"]')) === "Zufallswerte: ein" && !(await pr.textContent("#cl-q1b")).includes("Netz-Bezug450 W"), await pr.textContent("#cl-q1b"));
+    await pr.evaluate(() => resDemo(false)); await pr.waitForTimeout(200);
+    await pr.evaluate(() => { const d = HOSTS.find(h => h.plug && h.plug.cls === "50-1" && h.plug.data).plug.data; window.__k0 = d.tiles[0].kos.slice(); d.tiles[0].kos = ["9501", "9501", "9501", ""]; resDemo(true); }); await pr.waitForTimeout(200);
+    ok("v0.9.57: Zeilen am selben KO bekommen eigene Zufallswerte", await pr.evaluate(() => { const r = [...document.querySelectorAll("#cl-q1b .res-tile")][0].querySelectorAll(".row b"); return r.length === 3 && new Set([...r].map(x => x.textContent)).size >= 2; }), await pr.textContent("#cl-q1b"));
+    await pr.evaluate(() => { resDemo(false); const d = HOSTS.find(h => h.plug && h.plug.cls === "50-1" && h.plug.data).plug.data; window.__k1 = d.tiles[0].kos.join(); d.tiles[0].kos = window.__k0; resDemo(false); }); await pr.waitForTimeout(200);
+    ok("v0.9.57: nach dem Ausschalten hängen die Zeilen wieder an ihren KOs", await pr.evaluate(() => window.__k1 === "9501,9501,9501," && HOSTS.every(h => !h.plug || !h.plug.data || !h.plug.data.tiles || h.plug.data.tiles.every(t => !t.zk))));
+    ok("Klassisch: nach dem Ausschalten wieder echte Werte", (await pr.textContent("#cl-q1b")).replace(/\s+/g, " ").includes("Netz-Bezug450 W") && (await pr.locator("#cl-q1b .res-demo").count()) === 0);
+    ok("keine Seitenfehler", errs.length === 0, JSON.stringify(errs)); await pr.close(); }
+
+  console.log("Plugin Energiefluss 180-1 (v0.9.58, erfundene Einstellungen)");
+  { const pe = await start(b, "Demo", ["2|9801|4200.0|0", "2|9802|800.0|0", "2|9803|1900.0|0", "2|9804|1500.0|0", "2|9805|71.0|0", "2|9806|12.3|0", "2|9807|68.0|0", "2|9808|81.0|0", "2|9809|16.2|0", "2|9810|3.1|0", "2|9811|17.5|0", "2|9812|1.0|0"]);
+    const errs = []; pe.on("pageerror", e => errs.push(e.message));
+    await pe.evaluate(() => openPlugin("Energiefluss", "953")); await pe.waitForTimeout(900);
+    const nt = async k => (await pe.textContent(`#pbody [data-ef="${k}"]`)).replace(/\s+/g, " "), on = async k => pe.locator(`#pbody .ef-l.on[data-ef="${k}"]`).count();
+    ok("vier Kreise: Titel, Wert, Einheit, Zusatzzeile (v0.9.59 wie im QuadClient)", (await nt("pv")).includes("PV-ANLAGE4200W17.5 kWh") && (await nt("haus")).includes("HAUS1900W12.3 kWh") && (await nt("bat")).includes("SPEICHER800W lädt71 %") && (await nt("netz")).includes("NETZ1500WEinspeisung"), [await nt("pv"), await nt("haus"), await nt("bat"), await nt("netz")].join(" | "));
+    ok("Fußzeile: Eigenver., Autarkie, Einspeisung, Netzbezug, Live", (await nt("evpct")).includes("EIGENVER.68%") && (await nt("autpct")).includes("81%") && (await nt("einsp")).includes("16.2kWh") && (await nt("bezug")).includes("3.1kWh") && (await pe.textContent("#pbody svg.ef")).includes("Live"), await nt("einsp"));
+    ok("Einspeisung und Laden: Linien PV–Haus, PV–Netz, Speicher–Haus (rückwärts); Netz–Haus fehlt", await on("pvHaus") === 1 && await on("pvNetz") === 1 && await pe.locator('#pbody .ef-l.rev[data-ef="batHaus"]').count() === 1 && await on("netzHaus") === 0 && await pe.locator("#pbody .ef-l").count() === 3);
+    await pe.evaluate(() => { WSI.onmessage({ data: "1|9804|-650.0|0" }); WSI.onmessage({ data: "1|9812|2.0|0" }); }); await pe.waitForTimeout(300);
+    ok("Netz negativ = Bezug (Betrag), Speicher entlädt: Linien Netz→Haus und Speicher→Haus", (await nt("netz")).includes("650WBezug") && (await nt("bat")).includes("W entlädt") && await on("netzHaus") === 1 && await on("batHaus") === 1 && await pe.locator("#pbody .ef-l.rev").count() === 0 && await on("pvNetz") === 0, await nt("netz"));
+    await pe.evaluate(() => WSI.onmessage({ data: "1|9812|3.0|0" })); await pe.waitForTimeout(300);
+    ok("Speicher-Status 3 = Ruhe: nur „W“, keine Speicher-Linie", (await nt("bat")).includes("800W71 %") && await on("batHaus") === 0 && await pe.locator("#pbody .ef-l").count() === 2, await nt("bat"));
+    await pe.evaluate(() => { WSI.onmessage({ data: "1|9812|1.0|0" }); }); await pe.emulateMedia({ reducedMotion: "reduce" }); await pe.waitForTimeout(300);
+    ok("v0.9.60: Linien laufen auch bei „Animationen reduzieren“, beim Laden rückwärts", await pe.evaluate(() => { const a = getComputedStyle(document.querySelector('#pbody .ef-l[data-ef="pvHaus"]')), r = getComputedStyle(document.querySelector('#pbody .ef-l[data-ef="batHaus"]'));
+      return a.animationName === "efrun" && a.animationDirection === "normal" && r.animationName === "efrun" && r.animationDirection === "reverse"; }));
+    await pe.emulateMedia({ reducedMotion: null }); await pe.evaluate(() => { WSI.onmessage({ data: "1|9812|3.0|0" }); }); await pe.waitForTimeout(200);
+    ok("Einstellungen auch als Unterelemente lesbar, ohne KO „Warte auf Daten“", await pe.evaluate(() => { const T = PLUGIN_TYPES["180-1"], P = s => new DOMParser().parseFromString(s, "text/xml");
+      const a = T.read(P('<project><settings><pv>77</pv><netz ko="78"/></settings></project>')), e = T.read(P("<project/>"));
+      return a.ko.pv === "77" && a.ko.netz === "78" && a.ko.haus === "" && T.html(e).includes("Warte auf Daten") && T.tags(e).filter(Boolean).length === 0; }));
+    await pe.evaluate(() => { PLUGS["953"].quad = "1"; PLUGS["953"].vis = "1"; }); await pe.selectOption("#uisel", "classic"); await pe.waitForTimeout(600);
+    await pe.evaluate(() => clPlugin("953")); await pe.waitForTimeout(900);
+    ok("Klassisch: Zeichnung füllt den Quadranten, ohne überzustehen", await pe.evaluate(() => { const q = document.querySelector("#cl-q1b"), s = q.querySelector("svg.ef"); if (!s) return false; const a = q.getBoundingClientRect(), r = s.getBoundingClientRect(); return r.height > 200 && r.bottom <= a.bottom + 1 && r.right <= a.right + 1 && r.left >= a.left - 1; }));
+    ok("keine Seitenfehler", errs.length === 0, JSON.stringify(errs)); await pe.close(); }
+
+  console.log("Energiefluss mit Verbrauchern 99-3 und Zufallswerte (v0.9.61, erfundene Einstellungen)");
+  { const pv = await start(b, "Demo", ["2|9821|5000.0|0", "2|9822|600.0|0", "2|9823|9000.0|0", "2|9824|-4600.0|0", "2|9825|55.0|0", "2|9826|2.0|0", "2|9841|7400.0|0", "2|9842|0.0|0", "2|9843|900.0|0", "2|9844|-40.0|0",
+      "2|9801|4200.0|0", "2|9803|1900.0|0", "2|9804|1500.0|0", "2|9812|1.0|0"]);
+    const errs = []; pv.on("pageerror", e => errs.push(e.message));
+    await pv.evaluate(() => openPlugin("Energiefluss Verbraucher", "954")); await pv.waitForTimeout(900); await sent(pv);
+    const nt = async k => (await pv.textContent(`#pbody [data-ef="${k}"]`)).replace(/\s+/g, " "), cls = k => pv.getAttribute(`#pbody [data-ef="${k}"]`, "class");
+    ok("Grundwerte aus <ko id tag>: PV, Haus, Netz-Bezug, Speicher entlädt", (await nt("pv")).includes("PV-ANLAGE5000W") && (await nt("haus")).includes("HAUS9000W") && (await nt("netz")).includes("4600WBezug") && (await nt("bat")).includes("600W entlädt55 %"), await nt("bat"));
+    ok("vier Verbraucher, der ohne KO fehlt", await pv.locator("#pbody .ef-vb").count() === 4 && await pv.locator('#pbody [data-ef="vb:wb2"]').count() === 0);
+    ok("Verbraucher: Name, Leistung, Vorgabe-Name ohne Angabe", (await nt("vb:wb1")).includes("Wallbox Garage") && (await nt("vb:wb1")).includes("7400 W") && (await nt("vb:wm")).includes("Waschmaschine") && (await nt("vb:wm")).includes("0 W"), await nt("vb:wb1") + "|" + await nt("vb:wm"));
+    ok("Anschlusspunkt: Haus als Vorgabe, PV und Speicher wählbar; unbekanntes Symbol fällt auf die Vorgabe", await pv.evaluate(() => { const a = k => document.querySelector(`#pbody [data-ef="vb:${k}"]`).dataset.an, d = HOSTS.find(h => h.plug && h.plug.cls === "99-3").plug.data;
+      const l = k => document.querySelector(`#pbody [data-ef="vbl:${k}"]`).getAttribute("d");
+      return a("wb1") === "haus" && a("wm") === "haus" && a("s1") === "pv" && a("s2") === "bat" && l("wb1").startsWith("M253 197L") && l("s1").startsWith("M253 44L") && l("s2").startsWith("M95 120L") && d.vb.find(q => q.id === "s2").icon === "steckdose" && d.vb.find(q => q.id === "wm").icon === "wasch"; }));
+    ok("Linien: mit Leistung fließend, ohne Leistung dünner Strich, negativ rückwärts", (await cls("vbl:wb1")) === "ef-l on" && (await cls("vbl:wm")) === "ef-l0" && (await cls("vbl:s2")) === "ef-l on rev", await cls("vbl:s2"));
+    await pv.evaluate(() => { WSI.onmessage({ data: "1|9842|12800.0|0" }); WSI.onmessage({ data: "1|9841|0.0|0" }); }); await pv.waitForTimeout(300);
+    ok("KO-Telegramm: Verbraucher wechselt, ab 10 kW in kW", (await nt("vb:wm")).includes("12.8 kW") && (await cls("vbl:wm")) === "ef-l on" && (await cls("vbl:wb1")) === "ef-l0", await nt("vb:wm"));
+    ok("Plätze: bis zehn am Haus eine Reihe mit Namen, darüber zwei Reihen ohne; höchstens 17", await pv.evaluate(() => { const mk = (n, an) => Array.from({ length: n }, (_, i) => ({ id: an + i, name: "V", icon: "sonst", an, ko: "" }));
+      const a = efPlace(mk(10, "haus")), c = efPlace(mk(13, "haus").concat(mk(2, "pv"), mk(1, "bat"), mk(1, "netz"))), uniq = l => new Set(l.map(p => p.s.x + "," + p.s.y)).size === l.length;
+      const T = PLUGIN_TYPES["99-3"], x = new DOMParser().parseFromString("<project>" + Array.from({ length: 20 }, (_, i) => `<vb id="s${i}" tag="${7000 + i}"/>`).join("") + "</project>", "text/xml");
+      return a.length === 10 && uniq(a) && a.every(p => p.s.nm && p.s.y === 199) && c.length === 17 && uniq(c) && c.filter(p => p.q.an === "haus").every(p => !p.s.nm && p.s.y > 150) && c.filter(p => p.q.an !== "haus").every(p => p.s.y === 24) && T.read(x).vb.length === 17 && T.tags(T.read(x)).filter(Boolean).length === 17; }));
+    const real = (await pv.textContent("#pbody")).replace(/\s+/g, " ");
+    await pv.selectOption("#reszsel", "1"); await pv.waitForTimeout(300); const z1 = (await pv.textContent("#pbody")).replace(/\s+/g, " ");
+    ok("Zufallswerte: gekennzeichnet, eigene Verbraucher bleiben, Werte ändern sich", z1.includes("ZUFALLSWERTE") && await pv.locator("#pbody .ef-vb").count() === 4 && z1.includes("Wallbox Garage") && z1.replace("ZUFALLSWERTE", "") !== real, z1.slice(0, 200));
+    await pv.evaluate(() => { openPlugin("Energiefluss", "953"); }); await pv.waitForTimeout(900); await pv.evaluate(() => efDemoTick()); await pv.waitForTimeout(200);
+    const z2 = (await pv.textContent("#pbody")).replace(/\s+/g, " ");
+    ok("Zufallswerte im Plugin 180-1: neun Beispiel-Verbraucher an Haus, PV und Speicher", z2.includes("ZUFALLSWERTE") && await pv.locator("#pbody .ef-vb").count() === 9 && await pv.locator('#pbody .ef-vb[data-an="pv"]').count() === 1 && await pv.locator('#pbody .ef-vb[data-an="bat"]').count() === 1 && z2.includes("Wärmepumpe"), z2.slice(0, 200));
+    ok("Zufallswerte: Haus mindestens so groß wie seine Verbraucher, Netz = Bilanz", await pv.evaluate(() => HOSTS.filter(h => h.plug && h.plug.data && h.plug.data.fake).every(h => { const f = h.plug.data.fake, s = f.vb.filter(q => q.an === "haus").reduce((a, q) => a + q.val, 0);
+      return f.haus >= s && Math.abs(f.netz - (f.pv - f.haus - (f.batstate === 1 ? f.bat : -f.bat))) <= 1; })));
+    await pv.selectOption("#reszsel", "0"); await pv.waitForTimeout(300); const z3 = (await pv.textContent("#pbody")).replace(/\s+/g, " ");
+    ok("Zufallswerte aus: echte Werte, keine Beispiel-Verbraucher, nichts gesendet", !z3.includes("ZUFALLSWERTE") && z3.includes("PV-ANLAGE4200W") && await pv.locator("#pbody .ef-vb").count() === 0 && (await sent(pv)).length === 0 && await pv.evaluate(() => V.get("9801") === "4200.0"), z3.slice(0, 200));
+    ok("keine Seitenfehler", errs.length === 0, JSON.stringify(errs)); await pv.close(); }
+
+  console.log("Klassisch am Handy größer (v0.9.62)");
+  { const ph = await start(b, "Demo", ["2|111|1.0|0", "2|116|42.0|0"]); const errs = []; ph.on("pageerror", e => errs.push(e.message));
+    await ph.selectOption("#uisel", "classic"); await ph.waitForTimeout(500); await ph.setViewportSize({ width: 400, height: 860 }); await ph.waitForTimeout(500);
+    const m = await ph.evaluate(() => { const t = [...document.querySelectorAll("#cl-left .cl-mt")].map(e => e.getBoundingClientRect()); return { s: CL.s, n: t.length, w: Math.round(t[0].width), cols: new Set(t.map(r => Math.round(r.left))).size, max: Math.max(...t.map(r => r.right)), zoom: getComputedStyle(document.querySelector("#cl-left .cl-mt")).zoom }; });
+    ok("Bühne 453 breit: Maßstab rund 0,88 statt 0,59; Menü zwei Spalten ohne CSS-zoom, nichts steht über", Math.abs(m.s - 400 / 453) < 0.01 && m.cols === 2 && m.max <= 401 && m.w > 180 && (m.zoom === "1" || m.zoom === "normal" || m.zoom === undefined), JSON.stringify(m));
+    await ph.click('#cl-left .cl-mt:has-text("Wohnen")'); await ph.waitForTimeout(400);
+    const r = await ph.evaluate(() => { const row = [...document.querySelectorAll("#cl-left .cl-row[data-ref]")].find(e => e.querySelector(".cl-name") && e.querySelector(".cl-name").textContent === "Deckenlicht"), nm = row.querySelector(".cl-name"), rb = row.getBoundingClientRect(), nb = nm.getBoundingClientRect();
+      const ps = [...row.querySelectorAll(".cl-p")].map(e => e.getBoundingClientRect()).filter(q => q.width > 0);
+      return { r2: row.classList.contains("r2"), h: row.offsetHeight, fs: parseFloat(getComputedStyle(nm).fontSize) * CL.s, below: ps.length > 0 && ps.every(q => q.top >= nb.top + 30 * CL.s && q.bottom <= rb.bottom + 1 && q.left >= -1 && q.right <= 401),
+        n: ps.length, over: document.documentElement.scrollWidth - window.innerWidth, rows: document.querySelectorAll("#cl-left .cl-row[data-ref]").length, cap: Math.floor(CL.rows / 2) }; });
+    ok("Funktionszeile zweizeilig (80 hoch), Name mindestens 17 px groß", r.r2 && r.h === 80 && r.fs >= 17, JSON.stringify(r));
+    ok("Felder der Vorlage stehen in der zweiten Zeile und bleiben im Bild, kein waagrechter Überlauf", r.below && r.over <= 0, JSON.stringify(r));
+    ok("pro Seite halb so viele Funktionszeilen", r.rows <= r.cap && r.cap >= 5, JSON.stringify(r));
+    await ph.setViewportSize({ width: 1366, height: 768 }); await ph.waitForTimeout(500);
+    ok("breit unverändert: Zeile 40 hoch, einzeilig", await ph.evaluate(() => { const row = document.querySelector("#cl-left .cl-row[data-ref]"); return !!row && !row.classList.contains("r2") && row.offsetHeight === 40; }));
+    ok("keine Seitenfehler", errs.length === 0, JSON.stringify(errs)); await ph.close(); }
+
+  console.log("Plugin Meldeanlage 1-15, nur Anzeige (v0.9.51, erfundene Einstellungen)");
+  { const pm = await start(b, "Demo", ["2|9601|1.0|0", "2|9603|0.0|0", "2|9604|0.0|0", "2|9611|1.0|0", "2|9613|1.0|0", "2|9614|0.0|0",
+      "2|9621|Anlage bereit|0", "2|9622|Zeile zwei|0", "2|9631|Fenster Bad|0", "2|9632|Tuer Keller|0", "2|9640|2.0|0", "2|9650|0.0|0"]);
+    const errs = []; pm.on("pageerror", e => errs.push(e.message));
+    await pm.evaluate(() => openPlugin("Meldeanlage", "951")); await pm.waitForTimeout(900); await sent(pm);
+    const tx = async () => (await pm.textContent("#pbody")).replace(/\s+/g, " ");
+    let x = await tx();
+    ok("Bereiche: Extern scharfschaltbereit, Intern scharf", x.includes("ExternScharfschaltbereit") && x.includes("InternScharf"), x.slice(0, 300));
+    ok("Statusanzeige zeigt die belegten Textzeilen", x.includes("Anlage bereit") && x.includes("Zeile zwei"), x.slice(0, 300));
+    ok("Melderliste: Anzahl und Einträge", x.includes("fehlend oder offen2") && x.includes("Fenster Bad") && x.includes("Tuer Keller"), x.slice(0, 400));
+    ok("Ereignisspeicher aus dem Meldungsarchiv, neueste zuerst, Umlaute richtig", x.includes("Pumpe Störung") && x.indexOf("Fenster Bad offen") < x.indexOf("Pumpe wieder OK"), x.slice(0, 600));
+    ok("Feuer-Alarm nur bei aktivem Alarm", await pm.locator("#pbody .ma-fire").count() === 0);
+    await pm.evaluate(() => { WSI.onmessage({ data: "1|9650|1.0|0" }); WSI.onmessage({ data: "1|9604|1.0|0" }); WSI.onmessage({ data: "1|9613|0.0|0" }); WSI.onmessage({ data: "1|9611|0.0|0" }); }); await pm.waitForTimeout(300);
+    x = await tx();
+    ok("KO-Telegramme: Feuer-Alarm erscheint, Extern meldet Alarm, Intern nicht bereit", await pm.locator("#pbody .ma-fire").count() === 1 && x.includes("ExternAlarm") && x.includes("InternNicht bereit zum Scharfschalten"), x.slice(0, 300));
+    ok("Bereiche mit Knopf zum Scharfschalten, Quittung erst bei Alarm, Hinweis steht da", await pm.locator("#pbody .ma-area .ma-arm").count() === 2 && await pm.locator("#pbody .ma-ack").count() === 1 && x.includes("gedrückt halten"), x.slice(-200));
+    await pm.evaluate(() => document.querySelectorAll("#pbody .pval").forEach(e => e.click())); const s1 = await sent(pm);
+    ok("Antippen der Kacheln sendet nichts an den HomeServer", s1.length === 0, JSON.stringify(s1));
+    ok("unbekannte Art wird übersprungen und im Protokoll genannt", await pm.evaluate(() => document.getElementById("log").textContent.includes("Meldeanlage: unbekannte Art „Unbekannt“")));
+    await pm.evaluate(() => { PLUGS["951"].quad = "1"; PLUGS["951"].vis = "1"; }); await pm.selectOption("#uisel", "classic"); await pm.waitForTimeout(600);
+    await pm.evaluate(() => clPlugin("951")); await pm.waitForTimeout(900);
+    const mq = pm.locator("#cl-q1b"), mt = async () => (await mq.textContent()).replace(/\s+/g, " ");
+    ok("Klassisch: Kacheln in zwei Spalten ohne Rollen, Quittung bei Alarm da", await mq.locator(".cl-vgrid .cl-vt").count() === 6 && await mq.locator(".ma-ack").count() === 1
+      && await mq.locator(".cl-vgrid").evaluate(e => e.scrollHeight <= e.clientHeight + 1 && getComputedStyle(e).gridTemplateColumns.trim().split(/\s+/).length === 2), await mt());
+    ok("Klassisch: Zustand der Bereiche und Statuszeilen in der Kachel", (await mt()).includes("ExternAlarm") && (await mt()).includes("InternNicht bereit") && (await mt()).includes("Anlage bereit"), await mt());
+    ok("Klassisch: Melderliste zeigt die Anzahl groß", (await mq.locator(".ma-det .big").textContent()).trim() === "2");
+    await mq.locator('[data-pa="pg"][data-d="1"]').click(); await pm.waitForTimeout(200);
+    ok("Klassisch: zweite Seite mit dem Überfall-Alarm und Halteknopf", (await mt()).includes("Überfall") && await mq.locator(".ma-raid .ma-hold").count() === 1, await mt());
+    await mq.locator('[data-pa="pg"][data-d="-1"]').click(); await pm.waitForTimeout(200);
+    await mq.locator(".ma-det").click(); await pm.waitForTimeout(200);
+    ok("Klassisch: Melderliste öffnet die Unteransicht mit den Einträgen", (await mt()).includes("Fenster Bad") && (await mt()).includes("Tuer Keller") && await mq.locator('[data-pa="back"]').count() === 1, await mt());
+    await mq.locator('[data-pa="back"]').click(); await pm.waitForTimeout(200); await mq.locator(".ma-msg").click(); await pm.waitForTimeout(200);
+    ok("Klassisch: Ereignisspeicher öffnet die Meldungen", (await mt()).includes("Pumpe Störung"), await mt());
+    await mq.locator('[data-pa="back"]').click(); await pm.waitForTimeout(200); const s2 = await sent(pm);
+    ok("Klassisch: auch hier wird nichts an den HomeServer gesendet", s2.length === 0, JSON.stringify(s2));
+    ok("keine Seitenfehler", errs.length === 0, JSON.stringify(errs)); await pm.close(); }
+  console.log("Plugin KNX-Alarmzentrale 1-21, nur Anzeige (v0.9.52, erfundene Einstellungen)");
+  { const pz = await start(b, "Demo", ["2|9701|1.0|0", "2|9703|0.0|0", "2|9704|0.0|0", "2|9706|0.0|0", "2|9711|0.0|0", "2|9713|0.0|0", "2|9714|0.0|0", "2|9716|1.0|0", "2|9721|Zentrale ok|0", "2|9750|0.0|0", "2|9761|0.0|0"]);
+    const errs = []; pz.on("pageerror", e => errs.push(e.message));
+    await pz.evaluate(() => openPlugin("Alarmzentrale", "952")); await pz.waitForTimeout(700); await sent(pz);
+    let x = (await pz.textContent("#pbody")).replace(/\s+/g, " ");
+    ok("Bereiche: scharfschaltbereit und „Unscharf nach Alarm“, Statuszeile", x.includes("SB ExternScharfschaltbereit") && x.includes("SB InternUnscharf nach Alarm") && x.includes("Zentrale ok"), x.slice(0, 300));
+    ok("Feuer-Kachel steht bei der Alarmzentrale immer da (v0.9.53), ohne Alarm „Kein Alarm“", x.includes("FeuerKein Alarm") && !(await pz.textContent("#pbody .ma-raid")).includes("Überfall-Alarm"), x.slice(0, 300));
+    await pz.evaluate(() => { WSI.onmessage({ data: "1|9761|1.0|0" }); WSI.onmessage({ data: "1|9750|1.0|0" }); }); await pz.waitForTimeout(300);
+    ok("Überfall-Alarm empfangen und Feuer-Alarm erscheinen bei Alarm", (await pz.textContent("#pbody .ma-raid")).includes("Überfall-Alarm") && (await pz.textContent("#pbody .ma-fire")).includes("Feuer-Alarm"));
+    { const hb = pz.locator("#pbody .ma-hold"); await hb.dispatchEvent("pointerdown"); await pz.waitForTimeout(600); await hb.dispatchEvent("pointerup"); await pz.waitForTimeout(1800);
+      const k = await sent(pz); ok("Überfall-Alarm (v0.9.53): kurzes Drücken sendet nichts", k.length === 0, JSON.stringify(k));
+      await pz.locator("#pbody .ma-hold").dispatchEvent("pointerdown"); await pz.waitForTimeout(2300); const g = await sent(pz);
+      ok("Überfall-Alarm: nach 2 s Halten wird einmal 1 auf „senden“ geschickt", g.length === 1 && /^1\|9760\|1(\.0)?$/.test(g[0]), JSON.stringify(g));
+      await pz.locator("#pbody .ma-hold").dispatchEvent("pointerup"); }
+    await pz.evaluate(() => { PLUGS["952"].quad = "1"; PLUGS["952"].vis = "1"; }); await pz.selectOption("#uisel", "classic"); await pz.waitForTimeout(600);
+    await pz.evaluate(() => clPlugin("952")); await pz.waitForTimeout(700);
+    ok("Klassisch: fünf Kacheln in zwei Spalten", await pz.locator("#cl-q1b .cl-vgrid .cl-vt").count() === 5, await pz.textContent("#cl-q1b"));
+    await pz.evaluate(() => document.querySelectorAll("#cl-q1b .cl-vt").forEach(e => e.click())); const s3 = await sent(pz);
+    ok("nur Anzeige: nichts wird gesendet", s3.length === 0, JSON.stringify(s3));
+    ok("keine Seitenfehler", errs.length === 0, JSON.stringify(errs)); await pz.close(); }
+
+  console.log("Meldeanlage: Scharf-/Unscharfschalten und Quittieren mit Geräte-PIN (v0.9.54)");
+  { const pa = await start(b, "Demo", ["2|9601|1.0|0", "2|9603|0.0|0", "2|9604|0.0|0", "2|9611|0.0|0", "2|9613|0.0|0", "2|9614|0.0|0", "2|9650|0.0|0"]);
+    const errs = []; pa.on("pageerror", e => errs.push(e.message));
+    await pa.evaluate(() => openPlugin("Meldeanlage", "951")); await pa.waitForTimeout(700); await sent(pa);
+    const arm = () => pa.locator("#pbody .ma-area .ma-arm").first(), pin = async v => { await pa.fill("#dinput", v); await pa.click("#dok"); await pa.waitForTimeout(250); };
+    ok("Knopf zeigt „scharf schalten“, Quittung ohne Alarm nicht da", (await arm().textContent()).trim() === "scharf schalten" && await pa.locator("#pbody .ma-ack").count() === 0);
+    await arm().click(); await pa.waitForTimeout(200);
+    ok("erstes Bedienen: PIN festlegen", (await pa.textContent("#dtitle")).includes("PIN festlegen"));
+    await pin("12"); ok("PIN braucht vier Ziffern", (await pa.textContent("#derr")).includes("vier Ziffern"));
+    await pin("4711"); ok("PIN wird wiederholt abgefragt", (await pa.textContent("#dtitle")).includes("wiederholen"));
+    await pin("4711"); let k = await sent(pa);
+    ok("danach wird scharf geschaltet: 1 auf den Scharfschalt-Eingang", k.length === 1 && /^1\|9602\|1(\.0)?$/.test(k[0]), JSON.stringify(k));
+    ok("gespeichert wird nur ein Hashwert, nicht die PIN", await pa.evaluate(() => { const v = Object.entries(localStorage).filter(([n]) => n.includes("mapin.")); return v.length === 1 && !v[0][1].includes("4711") && v[0][1].length > 30; }));
+    await pa.evaluate(() => WSI.onmessage({ data: "1|9603|1.0|0" })); await pa.waitForTimeout(300);
+    ok("bei scharfem Bereich heißt der Knopf „unscharf schalten“", (await arm().textContent()).trim() === "unscharf schalten");
+    await arm().click(); await pa.waitForTimeout(200); await pin("0000"); k = await sent(pa);
+    ok("falsche PIN sendet nichts und fragt erneut", k.length === 0 && (await pa.textContent("#dtext")).includes("PIN falsch"), JSON.stringify(k));
+    await pin("4711"); k = await sent(pa);
+    ok("richtige PIN schaltet unscharf: 0", k.length === 1 && /^1\|9602\|0(\.0)?$/.test(k[0]), JSON.stringify(k));
+    await arm().click(); await pa.waitForTimeout(200); await pa.click("#dcancel"); await pa.waitForTimeout(200); k = await sent(pa);
+    ok("Abbrechen sendet nichts", k.length === 0, JSON.stringify(k));
+    await pa.evaluate(() => WSI.onmessage({ data: "1|9604|1.0|0" })); await pa.waitForTimeout(300);
+    ok("bei Alarm erscheint die Quittung", await pa.locator("#pbody .ma-ack .ma-ackb").count() === 1);
+    await pa.locator("#pbody .ma-ackb").click(); await pa.waitForTimeout(200); await pin("4711"); k = await sent(pa);
+    ok("Quittieren sendet 1 auf das Quittungs-KO", k.length === 1 && /^1\|9625\|1(\.0)?$/.test(k[0]), JSON.stringify(k));
+    await pa.evaluate(() => { PLUGS["951"].quad = "1"; PLUGS["951"].vis = "1"; }); await pa.selectOption("#uisel", "classic"); await pa.waitForTimeout(600);
+    await pa.evaluate(() => clPlugin("951")); await pa.waitForTimeout(700);
+    await pa.locator("#cl-q1b .ma-area .ma-arm").first().click(); await pa.waitForTimeout(200); await pin("4711"); k = await sent(pa);
+    ok("Klassisch: Knopf in der Kachel schaltet nach PIN", k.length === 1 && /^1\|9602\|0(\.0)?$/.test(k[0]), JSON.stringify(k));
+    ok("keine Seitenfehler", errs.length === 0, JSON.stringify(errs)); await pa.close(); }
+
+  console.log("Meldeanlage/Alarmzentrale mit eigenen Symbolen, Anordnung wie im QuadClient (v0.9.55)");
+  { const pi = await start(b, "Demo", ["2|9601|1.0|0", "2|9603|0.0|0", "2|9604|0.0|0", "2|9611|0.0|0", "2|9613|1.0|0", "2|9614|0.0|0", "2|9650|0.0|0", "2|9621|Anlage bereit|0", "2|9640|2.0|0"]);
+    const errs = []; pi.on("pageerror", e => errs.push(e.message));
+    await pi.evaluate(() => { PLUGS["951"].quad = "1"; PLUGS["951"].vis = "1"; }); await pi.selectOption("#uisel", "classic"); await pi.waitForTimeout(600);
+    await pi.evaluate(() => clPlugin("951")); await pi.waitForTimeout(700);
+    const q = pi.locator("#cl-q1b");
+    ok("jede Kachel hat links unten ein Symbol", await q.locator(".cl-vt").count() === 6 && await q.locator(".cl-vt .ico svg").count() === 6);
+    ok("Zustandsfeld rechts: Extern bereit (grün umrandet), Intern scharf (gefüllt)", await q.locator(".ma-area .ma-sq.ok").count() === 1 && await q.locator(".ma-area .ma-sq.on").count() === 1);
+    ok("Symbol unten links, Zustandsfeld rechts in der Kachel, nichts ragt heraus", await q.locator(".ma-area").first().evaluate(t => { const r = t.getBoundingClientRect(), i = t.querySelector(".ico").getBoundingClientRect(), s = t.querySelector(".ma-sq").getBoundingClientRect(), c = t.querySelector(".cap").getBoundingClientRect();
+      return i.left - r.left < 30 && i.top > c.bottom - 2 && r.right - s.right < 20 && s.left > i.right && s.top >= r.top && s.bottom <= r.bottom && i.bottom <= r.bottom + 1; }));
+    ok("Zustandsfeld ist als Feld erkennbar: Rahmen, „scharf“ gefüllt", await q.locator(".ma-area .ma-sq.ok").evaluate(e => parseFloat(getComputedStyle(e).borderTopWidth) >= 1) && await q.locator(".ma-area .ma-sq.on").evaluate(e => /233, 165, 45/.test(getComputedStyle(e).backgroundColor)));
+    ok("Zustand steht zusätzlich als Text da", (await q.locator(".ma-area .ma-stt").first().textContent()).trim() === "Scharfschaltbereit");
+    await pi.evaluate(() => WSI.onmessage({ data: "1|9604|1.0|0" })); await pi.waitForTimeout(300);
+    ok("Alarm: rotes Feld mit Warndreieck, Quittung mit eigenem Feld", await q.locator(".ma-area .ma-sq.al").count() === 1 && await q.locator(".ma-ack button.ma-sq").count() === 1);
+    await q.locator('[data-pa="pg"][data-d="1"]').click(); await pi.waitForTimeout(200);
+    ok("Überfall: Haltefeld mit Symbol", await q.locator(".ma-raid button.ma-hold.ma-sq svg").count() === 1);
+    ok("keine Seitenfehler", errs.length === 0, JSON.stringify(errs)); await pi.close();
+    const pj = await start(b, "Demo", ["2|9601|1.0|0"]); await pj.evaluate(() => openPlugin("Meldeanlage", "951")); await pj.waitForTimeout(700);
+    ok("Modern: Symbol vor jedem Kacheltitel", await pj.locator("#pbody .pval .cap .ma-ci svg").count() >= 6, String(await pj.locator("#pbody .pval .cap .ma-ci svg").count())); await pj.close(); }
+
+  console.log("Balkendiagramme klassisch wie im QuadClient (v0.9.52)");
+  { const pb = await start(b, "Demo", ["2|9301|123.44|0", "2|9302|7.0|0", "2|9303|68.0|0"]); const errs = []; pb.on("pageerror", e => errs.push(e.message));
+    await pb.evaluate(() => { PLUGS["906"].quad = "1"; PLUGS["906"].vis = "1"; }); await pb.selectOption("#uisel", "classic"); await pb.waitForTimeout(600);
+    await pb.evaluate(() => clPlugin("906")); await pb.waitForTimeout(900);
+    const q = pb.locator("#cl-q1b");
+    ok("Raster aus den Einstellungen: Grid_1x3 = eine Spalte, drei Zeilen", await q.locator(".cl-vgrid").evaluate(e => getComputedStyle(e).gridTemplateColumns.trim().split(/\s+/).length === 1 && getComputedStyle(e).gridTemplateRows.trim().split(/\s+/).length === 3));
+    ok("eine Reihe: Wert groß; zwei Reihen: Liste mit Beschriftung", (await q.locator(".cl-vt").count()) === 2 && (await q.locator(".cl-vt").nth(0).locator(".big").textContent()).replace(/\s+/g, " ").includes("123,4 l")
+      && (await q.locator(".cl-vt.multi .row").count()) === 2 && (await q.locator(".cl-vt.multi").textContent()).replace(/\s+/g, " ").includes("Bezug68 kWh"), await q.textContent());
+    ok("Blätterleiste vorhanden, bei einer Seite gesperrt", await q.locator(".cl-pgb button:disabled").count() === 2);
+    await q.locator(".cl-vt").nth(0).click(); await pb.waitForTimeout(700);
+    ok("Antippen öffnet das Diagramm, „Übersicht“ führt zurück", await q.locator("svg[data-bars]").count() === 1 && await q.locator('[data-pa="back"]').count() === 1);
+    await q.locator('[data-pa="back"]').click(); await pb.waitForTimeout(300);
+    ok("zurück in der Kachelübersicht", await q.locator(".cl-vt").count() === 2);
+    ok("keine Seitenfehler", errs.length === 0, JSON.stringify(errs)); await pb.close(); }
+
+  console.log("Menü: Gebäudestruktur anzeigen; Wertanzeige klassisch mit Blättern (v0.9.50)");
+  { const pm = await start(b, "Demo");
+    const r = await pm.evaluate(() => { const out = {};
+      P_.menu.push({ id: "t1", page: "0", t1: "Räume", t2: "", ico: "", group: "0", cmds: [{ type: "1", hierarchic: "False" }] }, { id: "t2", page: "0", t1: "Haus", t2: "", ico: "", group: "0", cmds: [{ type: "1", hierarchic: "True" }] },
+        { id: "t3", page: "0", t1: "Neu", t2: "", ico: "", group: "0", cmds: [{ type: "42", foo: "1" }] }, { id: "t4", page: "0", t1: "Leer", t2: "", ico: "", group: "0", cmds: [] });
+      menuAct("t1"); out.flat = cur + ":" + viewData(cur).rooms.length + ":" + P_.floors.reduce((n, f) => n + f.rooms.length, 0);
+      menuAct("t2"); out.hier = cur + ":" + viewData(cur).rooms.map(x => x.mv).join(",");
+      menuAct("t3"); menuAct("t4"); out.log = document.getElementById("log").textContent; return out; });
+    const [fc, fn, fa] = r.flat.split(":").slice(1);
+    ok("Gebäudestruktur anzeigen: alle Räume in einer Liste", r.flat.startsWith("g:0:") && +fn > 3 && fn === fa, r.flat);
+    ok("Strukturierte Liste: erst die Gebäudeteile", r.hier.startsWith("g:1:f:") && r.hier.split(",").length >= 2, r.hier);
+    await pm.waitForTimeout(300); await pm.locator('#grid .mcard[data-mv^="f:"]').first().click(); await pm.waitForTimeout(300);
+    ok("Gebäudeteil antippen öffnet dessen Räume", await pm.evaluate(() => cur.startsWith("f:") && document.querySelectorAll('#grid .mcard[data-mv^="r:"]').length > 0));
+    ok("unbekannter Befehl und Menüpunkt ohne Befehl stehen im Protokoll", r.log.includes("Befehl Art 42 kann der Client noch nicht (foo)") && r.log.includes("„Leer“ hat im Projekt keinen Befehl"));
+    const w = await pm.evaluate(() => { const T = PLUGIN_TYPES["1-2"], d = Array.from({ length: 8 }, (_, i) => ({ cap: "Kachel " + i, icon: "", vals: [{ t: "A", ko: "1", d: 0, u: "W", f: "" }, { t: "B", ko: "2", d: 0, u: "W", f: "" }] }));
+      const n = h => (h.match(/class="cl-vt/g) || []).length, h0 = T.htmlClassic(d); T.act(d, { dataset: { pa: "pg", d: "1" } }); const h1 = T.htmlClassic(d); T.act(d, { dataset: { pa: "pg", d: "1" } }); T.htmlClassic(d);
+      return [n(h0), n(h1), d.page, h0.includes("cl-pgb"), /repeat\(3,1fr\)/.test(h0), h1.includes("Kachel 6") && !h1.includes("Kachel 5")].join(","); });
+    ok("Wertanzeige klassisch: 6 Kacheln je Seite in 3 festen Zeilen, Blättern bleibt in den Grenzen", w === "6,2,1,true,true,true", w); await pm.close(); }
   pg = await start(b, "Gast");
   ok("Gast sieht Gruppe-1-Einträge nicht", await pg.locator("#grid .mcard", { hasText: "Garten" }).count() === 0);
   ok("Unterseite Extras sichtbar", await pg.locator("#grid .mcard", { hasText: "Extras" }).count() === 1);
