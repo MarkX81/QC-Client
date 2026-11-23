@@ -171,6 +171,8 @@ html:not(.cl-gira) .cl-vt .row{border-bottom-color:#ffffff14}html:not(.cl-gira) 
 #classic.cl-43 .cl-pi .cl-t{transform:translateY(4px)}
 #classic.cl-43 .cl-p[data-pos="1"] .cl-pi .cl-t{transform:translateY(6px)}
 #classic.cl-43 .cl-p[data-pos="2"] .cl-pi .cl-t{transform:translateY(10px)}
+#classic.cl-43 .cl-p[data-pos="2"] .cl-pi .cl-a:not(.cl-t){transform:translateY(2px)}
+#classic.cl-43 .cl-p[data-pos="2"] .cl-pi .cl-bgw{transform:translateY(2px) scale(1,1.333333);transform-origin:0 0}
 #classic.cl-43 .cl-vgrid.vg-6 .big{font-size:18px!important}
 #classic.cl-43 .cl-vgrid.vg-6 .row b{font-size:10px!important}
 #classic.cl-43 .cl-p[data-pos="1"]{left:250px!important}
@@ -1691,7 +1693,7 @@ PLUGIN_TYPES["1-2"] = {
     const v = `--rh:${rh.toFixed(1)}px;--fc:${Math.max(10, Math.min(16, rh * 0.19)).toFixed(1)}px;--fb:${(R === 3 ? 20 : Math.max(13, Math.min(30, rh * 0.36))).toFixed(1)}px;--ic:${Math.max(24, Math.min(48, rh * 0.58)).toFixed(1)}px;grid-template-rows:repeat(${R},1fr)`;
     return `<div class="cl-vgrid${R === 3 ? " vg-6" : ""}" style="${v}">` + d.map(g => { const ic = g.icon && qf(g.icon);
       const one = g.vals.length === 1;
-      return `<div class="cl-vt${one ? "" : " multi"}"><div class="cap">${esc(g.cap)}</div>${ic ? `<div class="ico">${ic}</div>` : ""}${one
+      return `<div class="cl-vt res-tile${one ? "" : " multi"}"><div class="cap">${esc(g.cap)}</div>${ic ? `<div class="ico">${ic}</div>` : ""}${one
         ? `<div class="big">${vu(g.vals[0])}</div>`
         : `<div class="list">${g.vals.map(v => `<div class="row"><span>${esc(v.t)}</span><b>${vu(v)}</b></div>`).join("")}</div>`}</div>`; }).join("") + "</div>";
   }
